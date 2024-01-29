@@ -4,3 +4,4 @@ vendor/
 .vscode/
 
 #files
+imgui.ini

@@ -9,6 +9,10 @@
 
 #include <SDL.h>
 
+#include <imgui.h>
+#include <backends/imgui_impl_sdl.h>
+#include <backends/imgui_impl_sdlrenderer.h>
+
 struct Platform {
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
@@ -56,6 +60,8 @@ void handle_events(Platform *platform, Input &input) {
     input.clear();
 
     while (SDL_PollEvent(&event)) {
+        ImGui_ImplSDL2_ProcessEvent(&event);
+
         switch (event.type) {
             case SDL_QUIT: {
                 platform->running = false;
@@ -81,13 +87,41 @@ int main(int argc, char **argv) {
     Input input = {};
     Platform platform = create_platform();
 
+    IMGUI_CHECKVERSION();
+
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO(); (void)io;
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplSDL2_InitForSDLRenderer(platform.window, platform.renderer);
+    ImGui_ImplSDLRenderer_Init(platform.renderer);
+
+    bool show_demo_window = true;
+    bool show_another_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
     while (platform.running) {
         handle_events(&platform, input);
 
+        ImGui_ImplSDLRenderer_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
+
+        ImGui::Render();
+
         SDL_SetRenderDrawColor(platform.renderer, 50, 125, 250, 255);
         SDL_RenderClear(platform.renderer);
+        ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
         SDL_RenderPresent(platform.renderer);
     }
+
+    ImGui_ImplSDLRenderer_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
     destroy_platform(&platform);
 
