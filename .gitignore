@@ -1,0 +1,6 @@
+#dirs
+build/
+vendor/
+.vscode/
+
+#files
