@@ -6,6 +6,8 @@
 
 #include <array>
 #include <memory>
+#include <vector>
+#include <string>
 
 #include <SDL.h>
 
@@ -83,10 +85,17 @@ void handle_events(Platform *platform, Input &input) {
     }
 }
 
+struct Transform {
+    Vec2 position;
+    Vec2 scale;
+    Vec2 rotation;
+};
+
 int main(int argc, char **argv) {
     Input input = {};
     Platform platform = create_platform();
 
+    /* ----- IMGUI ----- */
     IMGUI_CHECKVERSION();
 
     ImGui::CreateContext();
@@ -97,32 +106,85 @@ int main(int argc, char **argv) {
     ImGui_ImplSDL2_InitForSDLRenderer(platform.window, platform.renderer);
     ImGui_ImplSDLRenderer_Init(platform.renderer);
 
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    bool show_ui = true;
+
+    /* ----- TIME ----- */
+    u32 last_time = SDL_GetTicks();
+
+    float time_step = 1.0f;
+    float avg_timer = time_step;
+
+    f32 ui_delta_time = 0.0f;
+
+    /* ----- GAME OBJECTS ----- */
+    std::vector<Transform> transform_components = {};
+
+    for (int i = 0; i < 5; i++) {
+        Transform transform = {
+            Vec2( 32.0f + (48.0f * i), 32.0f),
+            Vec2(1.0f, 1.0f),
+        };
+
+        transform_components.push_back(transform);
+    }
 
     while (platform.running) {
+        u32 now_time = SDL_GetTicks();
+        f32 delta_time = (f32)(now_time - last_time) / 1000.0f;
+        last_time = now_time;
+
         handle_events(&platform, input);
+
+        avg_timer += delta_time;
+        if (avg_timer >= time_step) {
+            ui_delta_time = delta_time;
+            avg_timer = 0.0f;
+        }
+
+        if (input.key_pressed(' ')) {
+            show_ui = !show_ui;
+            avg_timer = 0.0f;
+        }
 
         ImGui_ImplSDLRenderer_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
+        if (show_ui) {
+            ImGui::Begin("UI Window", &show_ui);
+            ImGui::Text("Delta Time: %f ms", ui_delta_time * 1000);
+
+            if (ImGui::BeginListBox("Transforms")) {
+                for (i32 i = 0; i < transform_components.size(); i++) {
+                    const Transform &transform = transform_components.at(i);
+
+                    if (ImGui::CollapsingHeader("test")) {
+                        ImGui::Text("Position: x: %f, y: %f", transform.position.x, transform.position.y);
+                        ImGui::Text("Scale: x: %f, y: %f", transform.scale.x, transform.scale.y);
+                        ImGui::Text("Rotation: x: %f, y: %f", transform.rotation.x, transform.rotation.y);
+                    }
+                }
+
+                ImGui::EndListBox();
+            }
+
+            ImGui::End();
+        }
 
         ImGui::Render();
 
         SDL_SetRenderDrawColor(platform.renderer, 50, 125, 250, 255);
         SDL_RenderClear(platform.renderer);
+
         ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+        
         SDL_RenderPresent(platform.renderer);
     }
 
     ImGui_ImplSDLRenderer_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
-
+    
     destroy_platform(&platform);
 
     return 0;
