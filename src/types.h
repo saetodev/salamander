@@ -28,7 +28,30 @@ struct Vec2 {
 
     Vec2() = default;
     Vec2(f32 x, f32 y): x(x), y(y) {}
+
+    Vec2 &operator+=(const Vec2 &v) {
+        x += v.x;
+        y += v.y;
+
+        return *this;
+    }
 };
+
+inline Vec2 operator+(const Vec2 &a, const Vec2 &b) {
+    return Vec2(a.x + b.x, a.y + b.y);
+}
+
+inline Vec2 operator-(const Vec2 &a, const Vec2 &b) {
+    return Vec2(a.x - b.x, a.y - b.y);
+}
+
+inline Vec2 operator*(const Vec2 &a, const Vec2 &b) {
+    return Vec2(a.x * b.x, a.y * b.y);
+}
+
+inline Vec2 operator*(const Vec2 &v, const f32 s) {
+    return Vec2(v.x * s, v.y * s);
+}
 
 class MemoryArena {
 public:
