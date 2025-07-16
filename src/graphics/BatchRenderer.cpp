@@ -1,44 +1,27 @@
 #include "graphics/BatchRenderer.h"
 
 #include <glad/glad.h>
-#include <glm/glm.hpp>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace sal {
 
-    struct QuadVertex {
-        glm::vec4 position;
-        glm::vec4 color;
-        glm::vec2 textureCoord;
-    };
-
-    struct CircleVertex {
-        glm::vec4 worldPosition;
-        glm::vec4 localPosition;
-        glm::vec4 color;
-    };
-
-    struct LineVertex {
-        glm::vec4 position;
-        glm::vec4 color;
-    };
-
-    static const char* QUAD_VERTEX_SOURCE = "#version 100\n"
+    static const char* SHARED_VERTEX_SOURCE = "#version 100\n"
     "\n"
     "attribute vec4 a_position;\n"
     "attribute vec4 a_color;\n"
     "attribute vec2 a_textureCoord;\n"
+    "attribute vec2 a_localPosition;\n"
     "\n"
     "varying vec4 v_color;\n"
     "varying vec2 v_textureCoord;\n"
+    "varying vec2 v_localPosition;\n"
     "\n"
     "uniform mat4 u_projection;\n"
     "\n"
     "void main() {\n"
-    "   v_color        = a_color;\n"
-    "   v_textureCoord = a_textureCoord;\n "
-    "   gl_Position = u_projection * a_position;\n"
+    "   v_color         = a_color;\n"
+    "   v_textureCoord  = a_textureCoord;\n"
+    "   v_localPosition = a_localPosition;\n"
+    "   gl_Position     = u_projection * a_position;\n"
     "}";
 
     static const char* QUAD_FRAGMENT_SOURCE = "#version 100\n"
@@ -54,32 +37,15 @@ namespace sal {
     "   gl_FragColor = v_color * texture2D(u_texture, v_textureCoord);\n"
     "}";
 
-    static const char* CIRCLE_VERTEX_SOURCE = "#version 100\n"
-    "\n"
-    "attribute vec4 a_worldPosition;\n"
-    "attribute vec4 a_localPosition;\n"
-    "attribute vec4 a_color;\n"
-    "\n"
-    "varying vec4 v_localPosition;\n"
-    "varying vec4 v_color;\n"
-    "\n"
-    "uniform mat4 u_projection;\n"
-    "\n"
-    "void main() {\n"
-    "   v_localPosition = a_localPosition;\n"
-    "   v_color         = a_color;\n"
-    "   gl_Position     = u_projection * a_worldPosition;\n"
-    "}";
-
     static const char* CIRCLE_FRAGMENT_SOURCE = "#version 100\n"
     "\n"
     "precision mediump float;\n"
     "\n"
-    "varying vec4 v_localPosition;\n"
     "varying vec4 v_color;\n"
+    "varying vec2 v_localPosition;\n"
     "\n"
     "void main() {\n"
-    "   float distance = length(v_localPosition.xy);\n"
+    "   float distance = length(v_localPosition);\n"
     "   float mask     = step(distance, 1.0);\n"
     "\n"
     "   if (mask == 0.0) {\n"
@@ -87,20 +53,6 @@ namespace sal {
     "   }\n"
     "\n"
     "   gl_FragColor = v_color * vec4(vec3(mask), 1.0);\n"
-    "}";
-
-    static const char* LINE_VERTEX_SOURCE = "#version 100\n"
-    "\n"
-    "attribute vec4 a_position;\n"
-    "attribute vec4 a_color;\n"
-    "\n"
-    "varying vec4 v_color;\n"
-    "\n"
-    "uniform mat4 u_projection;\n"
-    "\n"
-    "void main() {\n"
-    "   v_color     = a_color;\n"
-    "   gl_Position = u_projection * a_position;\n"
     "}";
 
     static const char* LINE_FRAGMENT_SOURCE = "#version 100\n"
@@ -112,6 +64,29 @@ namespace sal {
     "void main() {\n"
     "   gl_FragColor = v_color;\n"
     "}";
+
+    static constexpr int VERTICES_PER_QUAD = 4;
+    static constexpr int INDICES_PER_QUAD  = 6;
+
+    static constexpr int VERTICES_PER_LINE = 2;
+
+    static constexpr int MAX_QUAD_COUNT   = 1024;
+    static constexpr int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * VERTICES_PER_QUAD;
+    static constexpr int MAX_INDEX_COUNT  = MAX_QUAD_COUNT * INDICES_PER_QUAD;
+
+    static constexpr glm::vec4 QUAD_VERTEX_POSITIONS[VERTICES_PER_QUAD] = {
+        { -0.5f, -0.5f, 0.0f, 1.0f },
+        {  0.5f, -0.5f, 0.0f, 1.0f },
+        {  0.5f,  0.5f, 0.0f, 1.0f },
+        { -0.5f,  0.5f, 0.0f, 1.0f },
+    };
+
+    static constexpr glm::vec2 QUAD_TEXTURE_COORDS[VERTICES_PER_QUAD] = {
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f },
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+    };
 
     BatchRenderer::BatchRenderer() {
 
@@ -130,66 +105,33 @@ namespace sal {
 			indexBuffer[i + 5] = offset + 0;
 		}
 
-        // init quads data
+        // init buffers
 
-        BufferLayout quadBufferLayout = {};
+        BufferLayout bufferLayout = {};
 
-        quadBufferLayout.Push("a_position", DataType::Float4);
-        quadBufferLayout.Push("a_color", DataType::Float4);
-        quadBufferLayout.Push("a_textureCoord", DataType::Float2);
+        bufferLayout.Push("a_position",      DataType::Float4);
+        bufferLayout.Push("a_color",         DataType::Float4);
+        bufferLayout.Push("a_textureCoord",  DataType::Float2);
+        bufferLayout.Push("a_localPosition", DataType::Float2);
 
-        m_quadVBO = MakeRef<VertexBuffer>(sizeof(QuadVertex) * MAX_VERTEX_COUNT, quadBufferLayout);
-        m_quadIBO = MakeRef<IndexBuffer>(sizeof(uint16_t) * MAX_INDEX_COUNT, indexBuffer);
-    
+        m_batchVBO = MakeRef<VertexBuffer>(sizeof(Vertex) * MAX_VERTEX_COUNT, bufferLayout);
+        m_batchIBO = MakeRef<IndexBuffer>(sizeof(uint16_t) * MAX_INDEX_COUNT, indexBuffer);
+
         uint32_t whitePixels[] = { 0xffffffff };
         m_whiteTexture         = MakeRef<Texture>(1, 1, &whitePixels);
-    
-        m_quadVertexBufferBase = new QuadVertex[MAX_VERTEX_COUNT];
-        m_quadVertexBufferPtr  = m_quadVertexBufferBase;
 
-        // init circles data
-
-        BufferLayout circleBufferLayout = {};
-
-        circleBufferLayout.Push("a_worldPosition", DataType::Float4);
-        circleBufferLayout.Push("a_localPosition", DataType::Float4);
-        circleBufferLayout.Push("a_color", DataType::Float4);
-
-        m_circleVBO = MakeRef<VertexBuffer>(sizeof(CircleVertex) * MAX_VERTEX_COUNT, circleBufferLayout);
-        m_circleIBO = MakeRef<IndexBuffer>(sizeof(uint16_t) * MAX_INDEX_COUNT, indexBuffer);
-
-        m_circleVertexBufferBase = new CircleVertex[MAX_VERTEX_COUNT];
-        m_circleVertexBufferPtr  = m_circleVertexBufferBase;
-
-        delete indexBuffer;
-
-        // init lines data
-
-        BufferLayout lineBufferLayout = {};
-
-        lineBufferLayout.Push("a_position", DataType::Float4);
-        lineBufferLayout.Push("a_color", DataType::Float4);
-
-        m_lineVBO = MakeRef<VertexBuffer>(sizeof(LineVertex) * MAX_VERTEX_COUNT, lineBufferLayout);
-
-        m_lineVertexBufferBase = new LineVertex[MAX_VERTEX_COUNT];
-        m_lineVertexBufferPtr  = m_lineVertexBufferBase;
+        m_batchVertexBufferBase = MakeScope<Vertex[]>(MAX_VERTEX_COUNT);
 
         // init shaders
 
-        m_quadShader   = MakeRef<Shader>(QUAD_VERTEX_SOURCE, QUAD_FRAGMENT_SOURCE, quadBufferLayout);
-        m_circleShader = MakeRef<Shader>(CIRCLE_VERTEX_SOURCE, CIRCLE_FRAGMENT_SOURCE, circleBufferLayout);
-        m_lineShader   = MakeRef<Shader>(LINE_VERTEX_SOURCE, LINE_FRAGMENT_SOURCE, lineBufferLayout);
-    }
-
-    BatchRenderer::~BatchRenderer() {
-        delete[] m_quadVertexBufferBase;
-        delete[] m_circleVertexBufferBase;
-        delete[] m_lineVertexBufferBase;
+        m_quadShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, QUAD_FRAGMENT_SOURCE,   bufferLayout);
+        m_circleShader = MakeRef<Shader>(SHARED_VERTEX_SOURCE, CIRCLE_FRAGMENT_SOURCE, bufferLayout);
+        m_lineShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, LINE_FRAGMENT_SOURCE,   bufferLayout);
     }
 
     void BatchRenderer::Begin(const glm::mat4& projection) {
-        m_projection = projection;
+        m_projection   = projection;
+        m_numDrawCalls = 0;
 
         glClear(GL_COLOR_BUFFER_BIT);
         StartBatch();
@@ -200,171 +142,173 @@ namespace sal {
     }
 
     void BatchRenderer::DrawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color) {
-        glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
-        glm::mat4 rotate    = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 scale     = glm::scale(glm::mat4(1.0f), glm::vec3(size, 1.0f));
-
-        glm::mat4 transform = translate * rotate * scale;
-
-        DrawTexture(m_whiteTexture, transform, color);
+        DrawTexture(m_whiteTexture, MakeTransform(position, size, rotation), color);
     }
 
     void BatchRenderer::DrawRect(const glm::mat4& transform, const glm::vec4& color) {
         DrawTexture(m_whiteTexture, transform, color);
     }
 
+    void BatchRenderer::DrawRectLines(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color) {
+        DrawRectLines(MakeTransform(position, size, rotation), color);
+    }
+
+    void BatchRenderer::DrawRectLines(const glm::mat4& transform, const glm::vec4& color) {
+        glm::vec2 v0 = transform * QUAD_VERTEX_POSITIONS[0];
+        glm::vec2 v1 = transform * QUAD_VERTEX_POSITIONS[1];
+        glm::vec2 v2 = transform * QUAD_VERTEX_POSITIONS[2];
+        glm::vec2 v3 = transform * QUAD_VERTEX_POSITIONS[3];
+
+        DrawLine(v0, v1, color);
+        DrawLine(v1, v2, color);
+        DrawLine(v2, v3, color);
+        DrawLine(v3, v0, color);
+    }   
+
     void BatchRenderer::DrawTexture(Ref<Texture> texture, const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color) {
-        glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
-        glm::mat4 rotate    = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 scale     = glm::scale(glm::mat4(1.0f), glm::vec3(size, 1.0f));
-
-        glm::mat4 transform = translate * rotate * scale;
-
-        DrawTexture(texture, transform, color);
+        DrawTexture(texture, MakeTransform(position, size, rotation), color);
     }
 
     void BatchRenderer::DrawTexture(Ref<Texture> texture, const glm::mat4& transform, const glm::vec4& color) {
-        if (m_quadCount == MAX_QUAD_COUNT || RequiresFlushForShape(Shape::Quad) || RequiresFlushForTexture(texture)) {
+        if (RequiresFlushForSpace() || RequiresFlushForShape(BatchShape::Quad) || RequiresFlushForTexture(texture)) {
             Flush();
             StartBatch();
         }
 
         for (int i = 0; i < VERTICES_PER_QUAD; i++) {
-            m_quadVertexBufferPtr->position     = transform * QUAD_VERTEX_POSITIONS[i];
-            m_quadVertexBufferPtr->color        = color;
-            m_quadVertexBufferPtr->textureCoord = QUAD_TEXTURE_COORDS[i]; 
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = transform * QUAD_VERTEX_POSITIONS[i];
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = QUAD_TEXTURE_COORDS[i];
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = {};
 
-            m_quadVertexBufferPtr++;
+            m_batchVertexBufferOffset++;
         }
 
-        m_batchShape   = Shape::Quad;
+        m_batchShape   = BatchShape::Quad;
         m_batchTexture = texture;
 
-        m_quadCount += 1;
+        m_batchVertexCount += VERTICES_PER_QUAD;
+        m_batchIndexCount  += INDICES_PER_QUAD;
     }
 
     void BatchRenderer::DrawCircle(const glm::vec2& position, float radius, const glm::vec4& color) {
-        glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
-        glm::mat4 scale     = glm::scale(glm::mat4(1.0f), glm::vec3(radius * 2.0f, radius * 2.0f, 1.0f));
-
-        glm::mat4 transform = translate * scale;
-
-        DrawCircle(transform, color);
+        DrawCircle(MakeTransform(position, { radius * 2.0f, radius * 2.0f }, 0.0f), color);
     }
 
     void BatchRenderer::DrawCircle(const glm::mat4& transform, const glm::vec4& color) {
-        if (m_circleCount == MAX_QUAD_COUNT || RequiresFlushForShape(Shape::Circle)) {
+        if (RequiresFlushForSpace() || RequiresFlushForShape(BatchShape::Circle)) {
             Flush();
             StartBatch();
         }
 
         for (int i = 0; i < VERTICES_PER_QUAD; i++) {
-            m_circleVertexBufferPtr->worldPosition = transform * QUAD_VERTEX_POSITIONS[i];
-            m_circleVertexBufferPtr->localPosition = QUAD_VERTEX_POSITIONS[i] * 2.0f;
-            m_circleVertexBufferPtr->color         = color;
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = transform * QUAD_VERTEX_POSITIONS[i];
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = {};
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = QUAD_VERTEX_POSITIONS[i] * 2.0f;
 
-            m_circleVertexBufferPtr++;
+            m_batchVertexBufferOffset++;
         }
 
-        m_batchShape   = Shape::Circle;
-        m_circleCount += 1;
+        m_batchShape = BatchShape::Circle;
+
+        m_batchVertexCount += VERTICES_PER_QUAD;
+        m_batchIndexCount  += INDICES_PER_QUAD;
     }
 
-    //TODO: a quad is twice as many vertices as a line. so lineVertexBuffer is at most half full.
     void BatchRenderer::DrawLine(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color) {
-        if (m_lineCount == MAX_QUAD_COUNT || RequiresFlushForShape(Shape::Line)) {
+        if (RequiresFlushForSpace() || RequiresFlushForShape(BatchShape::Line)) {
             Flush();
             StartBatch();
         }
 
-        m_lineVertexBufferPtr->position = glm::vec4(start, 0.0f, 1.0f);
-        m_lineVertexBufferPtr->color    = color;
+        m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = glm::vec4(start, 0.0f, 1.0f);
+        m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
+        m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = {};
+        m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = {};
 
-        m_lineVertexBufferPtr++;
+        m_batchVertexBufferOffset++;
 
-        m_lineVertexBufferPtr->position = glm::vec4(end, 0.0f, 1.0f);
-        m_lineVertexBufferPtr->color    = color;
+        m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = glm::vec4(end, 0.0f, 1.0f);
+        m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
+        m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = {};
+        m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = {};
 
-        m_lineVertexBufferPtr++;
+        m_batchVertexBufferOffset++;
 
-        m_batchShape = Shape::Line;
-        m_lineCount += 1;
+        m_batchShape = BatchShape::Line;
+        m_batchVertexCount += VERTICES_PER_LINE;
     }
     
     void BatchRenderer::StartBatch() {
-        m_batchShape    = Shape::None;
+        m_batchShape    = BatchShape::None;
         m_batchTexture  = {}; 
 
-        m_quadCount = 0;
-        m_quadVertexBufferPtr = m_quadVertexBufferBase;
+        m_batchVertexCount = 0;
+        m_batchIndexCount  = 0;
 
-        m_circleCount = 0;
-        m_circleVertexBufferPtr = m_circleVertexBufferBase;
-
-        m_lineCount = 0;
-        m_lineVertexBufferPtr = m_lineVertexBufferBase;
+        m_batchVertexBufferOffset = 0;
     }
 
     void BatchRenderer::Flush() {
-        if (m_batchShape == Shape::None) {
+        if ( m_batchShape == BatchShape::None) {
             return;
         }
 
-        if (m_quadCount && m_batchShape == Shape::Quad) {
-            size_t quadVertexBufferSize = (uintptr_t)m_quadVertexBufferPtr - (uintptr_t)m_quadVertexBufferBase;
-            size_t quadIndexCount       = m_quadCount * INDICES_PER_QUAD;
+        size_t batchVertexBufferSize = sizeof(Vertex) * m_batchVertexCount;
 
-            m_quadShader->Use();
-            m_quadVBO->Use();
-            m_quadIBO->Use();
+        m_batchVBO->Use();
+        m_batchVBO->SetData(batchVertexBufferSize, m_batchVertexBufferBase.get());
+        m_batchVBO->BindAttributes();
+        
+        switch (m_batchShape) {
+            case BatchShape::Quad: {
+                m_quadShader->Use();
 
-            glActiveTexture(GL_TEXTURE0);
-            m_whiteTexture->Use();
+                glActiveTexture(GL_TEXTURE0);
+                m_batchTexture->Use();
+                m_quadShader->SetMat4("u_projection", m_projection);
+                m_quadShader->SetInt("u_texture", 0);
 
-            m_quadShader->SetMat4("u_projection", m_projection);
-            m_quadShader->SetInt("u_texture", 0);
+                m_batchIBO->Use();
+                glDrawElements(GL_TRIANGLES, m_batchIndexCount, GL_UNSIGNED_SHORT, NULL);
 
-            m_quadVBO->SetData(quadVertexBufferSize, m_quadVertexBufferBase);
-            m_quadVBO->BindAttributes();
+                break;
+            }
 
-            glDrawElements(GL_TRIANGLES, quadIndexCount, GL_UNSIGNED_SHORT, NULL);
+            case BatchShape::Circle: {
+                m_circleShader->Use();
+                m_circleShader->SetMat4("u_projection", m_projection);
+
+                m_batchIBO->Use();
+                glDrawElements(GL_TRIANGLES, m_batchIndexCount, GL_UNSIGNED_SHORT, NULL);
+
+                break;
+            }
+
+            case BatchShape::Line: {
+                m_lineShader->Use();
+                m_lineShader->SetMat4("u_projection", m_projection);
+
+                glDrawArrays(GL_LINES, 0, m_batchVertexCount);
+
+                break;
+            }
         }
-        else if (m_circleCount && m_batchShape == Shape::Circle) {
-            size_t circleVertexBufferSize = (uintptr_t)m_circleVertexBufferPtr - (uintptr_t)m_circleVertexBufferBase;
-            size_t circleIndexCount       = m_circleCount * INDICES_PER_QUAD;
 
-            m_circleShader->Use();
-            m_circleVBO->Use();
-            m_circleIBO->Use();
-
-            m_circleShader->SetMat4("u_projection", m_projection);
-
-            m_circleVBO->SetData(circleVertexBufferSize, m_circleVertexBufferBase);
-            m_circleVBO->BindAttributes();
-
-            glDrawElements(GL_TRIANGLES, circleIndexCount, GL_UNSIGNED_SHORT, NULL);
-        }
-        else if (m_lineCount && m_batchShape == Shape::Line) {
-            size_t lineVertexBufferSize = (uintptr_t)m_lineVertexBufferPtr - (uintptr_t)m_lineVertexBufferBase;
-            size_t lineVertexCount      = m_lineCount * VERTICES_PER_LINE;
-
-            m_lineShader->Use();
-            m_lineShader->SetMat4("u_projection", m_projection);
-
-            m_lineVBO->Use();
-            m_lineVBO->SetData(lineVertexBufferSize, m_lineVertexBufferBase);
-            m_lineVBO->BindAttributes();
-
-            glDrawArrays(GL_LINES, 0, lineVertexCount);
-        }
+        m_numDrawCalls++;
     }
 
-    bool BatchRenderer::RequiresFlushForShape(Shape shape) {
-        return m_batchShape != Shape::None && m_batchShape != shape;
+    bool BatchRenderer::RequiresFlushForSpace() {
+        return m_batchVertexCount == MAX_VERTEX_COUNT;
+    }
+
+    bool BatchRenderer::RequiresFlushForShape(BatchShape shape) {
+        return m_batchShape != BatchShape::None && m_batchShape != shape;
     }
 
     bool BatchRenderer::RequiresFlushForTexture(Ref<Texture> texture) {
-        return m_batchShape != Shape::None && m_batchTexture != texture;
+        return m_batchShape != BatchShape::None && m_batchTexture != texture;
     }
 
 }

@@ -2,8 +2,6 @@
 
 #include "BufferLayout.h"
 
-#include <glm/glm.hpp>
-
 namespace sal {
 
     class Shader {
