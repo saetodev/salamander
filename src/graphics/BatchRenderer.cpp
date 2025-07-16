@@ -2,6 +2,14 @@
 
 #include <glad/glad.h>
 
+/* 
+===== RENDERER TODO ===== 
+- Should be able to draw circle lines, not just filled circles
+- Text rendering in general
+- Should be able to draw texture slices
+- Framebuffers
+*/
+
 namespace sal {
 
     static const char* SHARED_VERTEX_SOURCE = "#version 100\n"
@@ -16,12 +24,13 @@ namespace sal {
     "varying vec2 v_localPosition;\n"
     "\n"
     "uniform mat4 u_projection;\n"
+    "uniform mat4 u_view;\n"
     "\n"
     "void main() {\n"
     "   v_color         = a_color;\n"
     "   v_textureCoord  = a_textureCoord;\n"
     "   v_localPosition = a_localPosition;\n"
-    "   gl_Position     = u_projection * a_position;\n"
+    "   gl_Position     = u_projection * u_view * a_position;\n"
     "}";
 
     static const char* QUAD_FRAGMENT_SOURCE = "#version 100\n"
@@ -129,12 +138,13 @@ namespace sal {
         m_lineShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, LINE_FRAGMENT_SOURCE,   bufferLayout);
     }
 
-    void BatchRenderer::Begin(const glm::mat4& projection) {
-        m_projection   = projection;
-        m_numDrawCalls = 0;
-
+    void BatchRenderer::Begin(const Camera& camera) {
+        m_camera = camera;
+        
         glClear(GL_COLOR_BUFFER_BIT);
         StartBatch();
+
+        m_numDrawCalls = 0;
     }
 
     void BatchRenderer::End() {
@@ -255,6 +265,8 @@ namespace sal {
             return;
         }
 
+        m_camera.RecalculateViewMatrix();
+
         size_t batchVertexBufferSize = sizeof(Vertex) * m_batchVertexCount;
 
         m_batchVBO->Use();
@@ -267,7 +279,8 @@ namespace sal {
 
                 glActiveTexture(GL_TEXTURE0);
                 m_batchTexture->Use();
-                m_quadShader->SetMat4("u_projection", m_projection);
+                m_quadShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
+                m_quadShader->SetMat4("u_view", m_camera.ViewMatrix());
                 m_quadShader->SetInt("u_texture", 0);
 
                 m_batchIBO->Use();
@@ -278,7 +291,8 @@ namespace sal {
 
             case BatchShape::Circle: {
                 m_circleShader->Use();
-                m_circleShader->SetMat4("u_projection", m_projection);
+                m_circleShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
+                m_circleShader->SetMat4("u_view", m_camera.ViewMatrix());
 
                 m_batchIBO->Use();
                 glDrawElements(GL_TRIANGLES, m_batchIndexCount, GL_UNSIGNED_SHORT, NULL);
@@ -288,7 +302,8 @@ namespace sal {
 
             case BatchShape::Line: {
                 m_lineShader->Use();
-                m_lineShader->SetMat4("u_projection", m_projection);
+                m_lineShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
+                m_lineShader->SetMat4("u_view", m_camera.ViewMatrix());
 
                 glDrawArrays(GL_LINES, 0, m_batchVertexCount);
 

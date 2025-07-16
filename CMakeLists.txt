@@ -14,9 +14,11 @@ find_package(OpenGL REQUIRED)
 
 # === Sources ===
 add_library(${PROJECT_NAME}
-    "src/Window.cpp"
+    "src/core/Input.cpp"
+    "src/core/Window.cpp"
     "src/graphics/BatchRenderer.cpp"
     "src/graphics/Buffer.cpp"
+    "src/graphics/Camera.cpp"
     "src/graphics/Shader.cpp"
     "src/graphics/Texture.cpp"
 )

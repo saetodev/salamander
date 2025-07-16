@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graphics/BufferLayout.h"
+#include "graphics/Camera.h"
 #include "graphics/IndexBuffer.h"
 #include "graphics/Shader.h"
 #include "graphics/Texture.h"
@@ -12,7 +13,7 @@ namespace sal {
     public:
         BatchRenderer();
 
-        void Begin(const glm::mat4& projection);
+        void Begin(const Camera& camera);
         void End();
 
         void DrawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
@@ -52,23 +53,30 @@ namespace sal {
         bool RequiresFlushForShape(BatchShape shape);
         bool RequiresFlushForTexture(Ref<Texture> texture);
     private:
-        glm::mat4 m_projection;
+        // batch state
 
-        BatchShape   m_batchShape   = BatchShape::None;
-        Ref<Texture> m_batchTexture = {};
+        Camera m_camera = {};
 
+        BatchShape        m_batchShape   = BatchShape::None;
         Ref<VertexBuffer> m_batchVBO     = {};
         Ref<IndexBuffer>  m_batchIBO     = {};
+        Ref<Texture>      m_batchTexture = {};
         Ref<Texture>      m_whiteTexture = {};
+
+        // shader
 
         Ref<Shader> m_quadShader   = {};
         Ref<Shader> m_circleShader = {};
         Ref<Shader> m_lineShader   = {};
 
-        uint32_t m_batchVertexCount             = 0;
-        uint32_t m_batchIndexCount              = 0;
-        uint32_t m_batchVertexBufferOffset      = 0;
-        Scope<Vertex[]> m_batchVertexBufferBase = {};
+        // batch data
+
+        uint32_t        m_batchVertexCount        = 0;
+        uint32_t        m_batchIndexCount         = 0;
+        uint32_t        m_batchVertexBufferOffset = 0;
+        Scope<Vertex[]> m_batchVertexBufferBase   = {};
+
+        // stats
 
         uint32_t m_numDrawCalls = 0;
     };
