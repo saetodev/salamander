@@ -1,6 +1,9 @@
 #include "graphics/Texture.h"
 
-#include "glad/glad.h"
+#include <glad/glad.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 namespace sal {
 
@@ -26,6 +29,25 @@ namespace sal {
 
     void Texture::Use() {
         glBindTexture(GL_TEXTURE_2D, m_handle);
+    }
+
+    Ref<Texture> Texture::Load(std::string_view filename) {
+        int width  = 0;
+        int height = 0;
+        int comp   = 0;
+
+        uint8_t* data = stbi_load(filename.data(), &width, &height, &comp, 4);
+
+        if (!data) {
+            //TODO: error here
+            return {};
+        }
+
+        Ref<Texture> texture = MakeRef<Texture>(width, height, data);
+        
+        stbi_image_free(data);
+
+        return texture;
     }
 
 }

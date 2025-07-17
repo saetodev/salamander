@@ -63,13 +63,13 @@ namespace sal {
         Ref<Texture>      m_batchTexture = {};
         Ref<Texture>      m_whiteTexture = {};
 
-        // shader
+        // shaders
 
         Ref<Shader> m_quadShader   = {};
         Ref<Shader> m_circleShader = {};
         Ref<Shader> m_lineShader   = {};
 
-        // batch data
+        // batch frame data
 
         uint32_t        m_batchVertexCount        = 0;
         uint32_t        m_batchIndexCount         = 0;
