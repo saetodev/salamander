@@ -1,4 +1,10 @@
 #include "graphics/BatchRenderer.h"
+#include "graphics/BufferLayout.h"
+#include "graphics/IndexBuffer.h"
+#include "graphics/RenderAPI.h"
+#include "graphics/Shader.h"
+#include "graphics/Texture.h"
+#include "graphics/VertexBuffer.h"
 
 #include <glad/glad.h>
 
@@ -140,11 +146,9 @@ namespace sal {
 
     void BatchRenderer::Begin(const Camera& camera) {
         m_camera = camera;
-        
-        glClear(GL_COLOR_BUFFER_BIT);
-        StartBatch();
-
         m_numDrawCalls = 0;
+
+        StartBatch();
     }
 
     void BatchRenderer::End() {
@@ -175,12 +179,12 @@ namespace sal {
         DrawLine(v3, v0, color);
     }   
 
-    void BatchRenderer::DrawTexture(Ref<Texture> texture, const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color) {
+    void BatchRenderer::DrawTexture(const Ref<Texture>& texture, const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color) {
         DrawTexture(texture, MakeTransform(position, size, rotation), color);
     }
 
-    void BatchRenderer::DrawTexture(Ref<Texture> texture, const glm::mat4& transform, const glm::vec4& color) {
-        if (RequiresFlushForSpace() || RequiresFlushForShape(BatchShape::Quad) || RequiresFlushForTexture(texture)) {
+    void BatchRenderer::DrawTexture(const Ref<Texture>& texture, const glm::mat4& transform, const glm::vec4& color) {
+        if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Quad) || RequiresFlushForTexture(texture)) {
             Flush();
             StartBatch();
         }
@@ -194,7 +198,7 @@ namespace sal {
             m_batchVertexBufferOffset++;
         }
 
-        m_batchShape   = BatchShape::Quad;
+        m_batchMode    = BatchMode::Quad;
         m_batchTexture = texture;
 
         m_batchVertexCount += VERTICES_PER_QUAD;
@@ -206,7 +210,7 @@ namespace sal {
     }
 
     void BatchRenderer::DrawCircle(const glm::mat4& transform, const glm::vec4& color) {
-        if (RequiresFlushForSpace() || RequiresFlushForShape(BatchShape::Circle)) {
+        if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Circle)) {
             Flush();
             StartBatch();
         }
@@ -220,14 +224,14 @@ namespace sal {
             m_batchVertexBufferOffset++;
         }
 
-        m_batchShape = BatchShape::Circle;
+        m_batchMode = BatchMode::Circle;
 
         m_batchVertexCount += VERTICES_PER_QUAD;
         m_batchIndexCount  += INDICES_PER_QUAD;
     }
 
     void BatchRenderer::DrawLine(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color) {
-        if (RequiresFlushForSpace() || RequiresFlushForShape(BatchShape::Line)) {
+        if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Line)) {
             Flush();
             StartBatch();
         }
@@ -246,13 +250,13 @@ namespace sal {
 
         m_batchVertexBufferOffset++;
 
-        m_batchShape = BatchShape::Line;
+        m_batchMode = BatchMode::Line;
         m_batchVertexCount += VERTICES_PER_LINE;
     }
     
     void BatchRenderer::StartBatch() {
-        m_batchShape    = BatchShape::None;
-        m_batchTexture  = {}; 
+        m_batchMode    = BatchMode::None;
+        m_batchTexture = {}; 
 
         m_batchVertexCount = 0;
         m_batchIndexCount  = 0;
@@ -261,7 +265,7 @@ namespace sal {
     }
 
     void BatchRenderer::Flush() {
-        if ( m_batchShape == BatchShape::None) {
+        if (m_batchMode == BatchMode::None) {
             return;
         }
 
@@ -270,42 +274,44 @@ namespace sal {
         size_t batchVertexBufferSize = sizeof(Vertex) * m_batchVertexCount;
 
         m_batchVBO->Use();
+        m_batchIBO->Use();
+
         m_batchVBO->SetData(batchVertexBufferSize, m_batchVertexBufferBase.get());
         m_batchVBO->BindAttributes();
         
-        switch (m_batchShape) {
-            case BatchShape::Quad: {
+        switch (m_batchMode) {
+            case BatchMode::Quad: {
                 m_quadShader->Use();
 
-                glActiveTexture(GL_TEXTURE0);
-                m_batchTexture->Use();
+                RenderAPI::BindTextureUnit(m_batchTexture, 0);
+
                 m_quadShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
                 m_quadShader->SetMat4("u_view", m_camera.ViewMatrix());
                 m_quadShader->SetInt("u_texture", 0);
 
-                m_batchIBO->Use();
-                glDrawElements(GL_TRIANGLES, m_batchIndexCount, GL_UNSIGNED_SHORT, NULL);
+                RenderAPI::DrawBufferIndexed(Primitive::Triangles, m_batchIndexCount);
 
                 break;
             }
 
-            case BatchShape::Circle: {
+            case BatchMode::Circle: {
                 m_circleShader->Use();
                 m_circleShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
                 m_circleShader->SetMat4("u_view", m_camera.ViewMatrix());
 
                 m_batchIBO->Use();
-                glDrawElements(GL_TRIANGLES, m_batchIndexCount, GL_UNSIGNED_SHORT, NULL);
+
+                RenderAPI::DrawBufferIndexed(Primitive::Triangles, m_batchIndexCount);
 
                 break;
             }
 
-            case BatchShape::Line: {
+            case BatchMode::Line: {
                 m_lineShader->Use();
                 m_lineShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
                 m_lineShader->SetMat4("u_view", m_camera.ViewMatrix());
 
-                glDrawArrays(GL_LINES, 0, m_batchVertexCount);
+                RenderAPI::DrawBuffer(Primitive::Lines, m_batchVertexCount);
 
                 break;
             }
@@ -318,12 +324,12 @@ namespace sal {
         return m_batchVertexCount == MAX_VERTEX_COUNT;
     }
 
-    bool BatchRenderer::RequiresFlushForShape(BatchShape shape) {
-        return m_batchShape != BatchShape::None && m_batchShape != shape;
+    bool BatchRenderer::RequiresFlushForMode(BatchMode mode) {
+        return m_batchMode != BatchMode::None && m_batchMode != mode;
     }
 
     bool BatchRenderer::RequiresFlushForTexture(Ref<Texture> texture) {
-        return m_batchShape != BatchShape::None && m_batchTexture != texture;
+        return m_batchMode != BatchMode::None && m_batchTexture != texture;
     }
 
 }

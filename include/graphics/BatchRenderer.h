@@ -1,13 +1,13 @@
 #pragma once
 
-#include "graphics/BufferLayout.h"
 #include "graphics/Camera.h"
-#include "graphics/IndexBuffer.h"
-#include "graphics/Shader.h"
-#include "graphics/Texture.h"
-#include "graphics/VertexBuffer.h"
 
 namespace sal {
+
+    class VertexBuffer;
+    class IndexBuffer;
+    class Shader;
+    class Texture;
 
     class BatchRenderer {
     public:
@@ -22,8 +22,8 @@ namespace sal {
         void DrawRectLines(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
         void DrawRectLines(const glm::mat4& transform, const glm::vec4& color);
 
-        void DrawTexture(Ref<Texture> texture, const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-        void DrawTexture(Ref<Texture> texture, const glm::mat4& transform, const glm::vec4& color);
+        void DrawTexture(const Ref<Texture>& texture, const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+        void DrawTexture(const Ref<Texture>& texture, const glm::mat4& transform, const glm::vec4& color);
 
         void DrawCircle(const glm::vec2& position, float radius, const glm::vec4& color);
         void DrawCircle(const glm::mat4& transform, const glm::vec4& color);
@@ -39,7 +39,7 @@ namespace sal {
             glm::vec2 localPosition; // used for circles
         };
 
-        enum BatchShape {
+        enum BatchMode {
             None,
             Quad,
             Circle,
@@ -50,14 +50,14 @@ namespace sal {
         void Flush();
 
         bool RequiresFlushForSpace();
-        bool RequiresFlushForShape(BatchShape shape);
+        bool RequiresFlushForMode(BatchMode mode);
         bool RequiresFlushForTexture(Ref<Texture> texture);
     private:
         // batch state
 
         Camera m_camera = {};
 
-        BatchShape        m_batchShape   = BatchShape::None;
+        BatchMode         m_batchMode    = BatchMode::None;
         Ref<VertexBuffer> m_batchVBO     = {};
         Ref<IndexBuffer>  m_batchIBO     = {};
         Ref<Texture>      m_batchTexture = {};

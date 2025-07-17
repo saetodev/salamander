@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME}
     "src/graphics/BatchRenderer.cpp"
     "src/graphics/Buffer.cpp"
     "src/graphics/Camera.cpp"
+    "src/graphics/RenderAPI.cpp"
     "src/graphics/Shader.cpp"
     "src/graphics/Texture.cpp"
 )
