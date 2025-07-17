@@ -18,16 +18,14 @@ namespace sal {
 
         void DrawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
         void DrawRect(const glm::mat4& transform, const glm::vec4& color);
-
         void DrawRectLines(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
         void DrawRectLines(const glm::mat4& transform, const glm::vec4& color);
 
         void DrawTexture(const Ref<Texture>& texture, const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
         void DrawTexture(const Ref<Texture>& texture, const glm::mat4& transform, const glm::vec4& color);
+        void DrawTexture(const Ref<Texture>& texture, const glm::vec4& source, const glm::mat4& transform, const glm::vec4& color);
 
         void DrawCircle(const glm::vec2& position, float radius, const glm::vec4& color);
-        void DrawCircle(const glm::mat4& transform, const glm::vec4& color);
-
         void DrawLine(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color);
 
         uint32_t NumDrawCalls() const { return m_numDrawCalls; }

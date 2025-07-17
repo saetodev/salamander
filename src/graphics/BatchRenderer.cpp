@@ -184,15 +184,23 @@ namespace sal {
     }
 
     void BatchRenderer::DrawTexture(const Ref<Texture>& texture, const glm::mat4& transform, const glm::vec4& color) {
+        DrawTexture(texture, { 0.0f, 0.0f, texture->Width(), texture->Height() }, transform, color);
+    }
+
+    void BatchRenderer::DrawTexture(const Ref<Texture>& texture, const glm::vec4& source, const glm::mat4& transform, const glm::vec4& color) {
         if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Quad) || RequiresFlushForTexture(texture)) {
             Flush();
             StartBatch();
         }
 
+        glm::vec4 textureSize  = glm::vec4(texture->Width(), texture->Height(), texture->Width(), texture->Height());
+        glm::vec4 scaledSource = source / textureSize;
+        glm::mat4 uvTransform  = MakeTransform(glm::vec2(scaledSource.x, scaledSource.y), glm::vec2(scaledSource.z, scaledSource.w), 0.0f);
+
         for (int i = 0; i < VERTICES_PER_QUAD; i++) {
             m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = transform * QUAD_VERTEX_POSITIONS[i];
             m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = QUAD_TEXTURE_COORDS[i];
+            m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = uvTransform * glm::vec4(QUAD_TEXTURE_COORDS[i], 0.0f, 1.0f);
             m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = {};
 
             m_batchVertexBufferOffset++;
@@ -206,14 +214,12 @@ namespace sal {
     }
 
     void BatchRenderer::DrawCircle(const glm::vec2& position, float radius, const glm::vec4& color) {
-        DrawCircle(MakeTransform(position, { radius * 2.0f, radius * 2.0f }, 0.0f), color);
-    }
-
-    void BatchRenderer::DrawCircle(const glm::mat4& transform, const glm::vec4& color) {
         if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Circle)) {
             Flush();
             StartBatch();
         }
+
+        glm::mat4 transform = MakeTransform(position, glm::vec2(radius) * 2.0f, 0.0f);
 
         for (int i = 0; i < VERTICES_PER_QUAD; i++) {
             m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = transform * QUAD_VERTEX_POSITIONS[i];
