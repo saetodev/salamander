@@ -1,5 +1,5 @@
-#include "graphics/IndexBuffer.h"
-#include "graphics/VertexBuffer.h"
+#include "renderer/IndexBuffer.h"
+#include "renderer/VertexBuffer.h"
 
 #include <glad/glad.h>
 

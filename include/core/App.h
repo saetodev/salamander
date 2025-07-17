@@ -1,10 +1,11 @@
 #pragma once
 
-#include "core/Input.h"
-#include "core/Window.h"
-#include "graphics/BatchRenderer.h"
+#include "core/Base.h"
 
 namespace sal {
+
+    struct Window;
+    struct BatchRenderer;
 
     struct Settings {
         int         windowWidth  = 640;

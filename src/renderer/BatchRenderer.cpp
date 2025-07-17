@@ -1,20 +1,12 @@
-#include "graphics/BatchRenderer.h"
-#include "graphics/BufferLayout.h"
-#include "graphics/IndexBuffer.h"
-#include "graphics/RenderAPI.h"
-#include "graphics/Shader.h"
-#include "graphics/Texture.h"
-#include "graphics/VertexBuffer.h"
+#include "renderer/BatchRenderer.h"
+#include "renderer/BufferLayout.h"
+#include "renderer/IndexBuffer.h"
+#include "renderer/RenderAPI.h"
+#include "renderer/Shader.h"
+#include "renderer/Texture.h"
+#include "renderer/VertexBuffer.h"
 
 #include <glad/glad.h>
-
-/* 
-===== RENDERER TODO ===== 
-- Should be able to draw circle lines, not just filled circles
-- Text rendering in general
-- Should be able to draw texture slices
-- Framebuffers
-*/
 
 namespace sal {
 

@@ -1,4 +1,6 @@
-#include "App.h"
+#include "core/App.h"
+#include "core/Window.h"
+#include "renderer/BatchRenderer.h"
 
 namespace sal {
 

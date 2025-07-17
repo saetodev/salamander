@@ -14,15 +14,15 @@ find_package(OpenGL REQUIRED)
 
 # === Sources ===
 add_library(${PROJECT_NAME}
-    "src/App.cpp"
+    "src/core/App.cpp"
     "src/core/Input.cpp"
     "src/core/Window.cpp"
-    "src/graphics/BatchRenderer.cpp"
-    "src/graphics/Buffer.cpp"
-    "src/graphics/Camera.cpp"
-    "src/graphics/RenderAPI.cpp"
-    "src/graphics/Shader.cpp"
-    "src/graphics/Texture.cpp"
+    "src/renderer/BatchRenderer.cpp"
+    "src/renderer/Buffer.cpp"
+    "src/renderer/Camera.cpp"
+    "src/renderer/RenderAPI.cpp"
+    "src/renderer/Shader.cpp"
+    "src/renderer/Texture.cpp"
 )
 
 target_include_directories(${PROJECT_NAME}

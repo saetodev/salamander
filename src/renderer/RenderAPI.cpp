@@ -1,5 +1,5 @@
-#include "graphics/RenderAPI.h"
-#include "graphics/Texture.h"
+#include "renderer/RenderAPI.h"
+#include "renderer/Texture.h"
 
 #include <glad/glad.h>
 
