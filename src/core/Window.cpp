@@ -1,7 +1,6 @@
 #include "core/Input.h"
 #include "core/Window.h"
 
-#include <assert.h>
 #include <iostream>
 
 #include <glad/glad.h>
@@ -9,18 +8,30 @@
 
 namespace sal {
 
-    static GLFWwindow* s_window = NULL;
+    static void MousePosCallback(GLFWwindow* handle, double xpos, double ypos) {
+        Window* window = static_cast<Window*>(glfwGetWindowUserPointer(handle));
 
-    static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+        float x = xpos / window->XScale();
+        float y = ypos / window->YScale();
+
+        Input::Get().SetMousePosition({ x, y });
+    }
+
+    static void KeyCallback(GLFWwindow* handle, int key, int scancode, int action, int mods) {
         bool isDown  = (action == GLFW_PRESS) || (action == GLFW_REPEAT);
         bool wasDown = (action == GLFW_RELEASE) || (action == GLFW_REPEAT);
         
         Input::Get().SetKey(key, isDown, wasDown);
     }
 
-    void Window::Init(int width, int height, const char* title) {
-        assert(!s_window);
+    static void MouseButtonCallback(GLFWwindow* handle, int button, int action, int mods) {
+        bool isDown  = (action == GLFW_PRESS) || (action == GLFW_REPEAT);
+        bool wasDown = (action == GLFW_RELEASE) || (action == GLFW_REPEAT);
 
+        Input::Get().SetMouseButton(button, isDown, wasDown);
+    }
+
+    Window::Window(int width, int height, const char* title) {
         if (!glfwInit()) {
             std::cout << "GLFW init failed" << std::endl;
             std::exit(-1);
@@ -34,27 +45,40 @@ namespace sal {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        s_window = glfwCreateWindow(width, height, title, NULL, NULL);
+        m_handle = glfwCreateWindow(width, height, title, NULL, NULL);
 
-        if (!s_window) {
+        if (!m_handle) {
             std::cout << "GLFW create window failed" << std::endl;
             std::exit(-1);
         }
 
-        glfwSetKeyCallback(s_window, KeyCallback);
+        glfwSetWindowUserPointer(m_handle, this);
 
-        glfwMakeContextCurrent(s_window);
+        glfwSetCursorPosCallback(m_handle, MousePosCallback);
+        glfwSetKeyCallback(m_handle, KeyCallback);
+        glfwSetMouseButtonCallback(m_handle, MouseButtonCallback);
+
+        glfwMakeContextCurrent(m_handle);
 
         if (!gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress)) {
             std::cout << "GLAD GLES2 loader failed" << std::endl;
             std::exit(-1);
         }
+
+        m_width  = width;
+        m_height = height;
+
+        int realWidth  = 0;
+        int realHeight = 0;
+
+        glfwGetWindowSize(m_handle, &realWidth, &realHeight);
+
+        m_xscale = (float)realWidth / (float)m_width;
+        m_yscale = (float)realHeight / (float)m_height;
     }
 
-    void Window::Shutdown() {
-        assert(s_window);
-
-        glfwDestroyWindow(s_window);
+    Window::~Window() {
+        glfwDestroyWindow(m_handle);
         glfwTerminate();
     }
 
@@ -62,12 +86,16 @@ namespace sal {
         //TODO: should this be here?
         Input::Get().Reset();
 
-        glfwSwapBuffers(s_window);
+        glfwSwapBuffers(m_handle);
         glfwPollEvents();
+
+        float nowTime = (float)glfwGetTime();
+        m_deltaTime   = nowTime - m_lastTime;
+        m_lastTime    = nowTime;
     }
 
     bool Window::Running() {
-        return !glfwWindowShouldClose(s_window);
+        return !glfwWindowShouldClose(m_handle);
     }
     
 }

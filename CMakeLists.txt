@@ -14,6 +14,7 @@ find_package(OpenGL REQUIRED)
 
 # === Sources ===
 add_library(${PROJECT_NAME}
+    "src/App.cpp"
     "src/core/Input.cpp"
     "src/core/Window.cpp"
     "src/graphics/BatchRenderer.cpp"
@@ -34,5 +35,10 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE OpenGL::GL
 )
 
-# === Example Project ===
-add_subdirectory(example)
+if (BUILD_EXAMPLE)
+    add_subdirectory("example")
+endif()
+
+if (BUILD_TESTS)
+    add_subdirectory("tests/renderer-stress-test")
+endif()
