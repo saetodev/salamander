@@ -28,6 +28,8 @@ namespace sal {
         static BatchRenderer& GetRenderer() { return *s_instance->m_renderer; }
         static Input& GetInput() { return *s_instance->m_input; }
     private:
+        Settings m_settings = {};
+
         Scope<Window>        m_window   = {};
         Scope<BatchRenderer> m_renderer = {};
         Scope<Input>         m_input    = {};

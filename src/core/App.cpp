@@ -6,16 +6,19 @@
 namespace sal {
 
     App::App(const Settings& settings) {
-        ASSERT(!s_instance);
+        ASSERT(!s_instance); s_instance = this;
 
-        s_instance = this;
+        m_settings = settings;
 
-        m_window   = MakeScope<Window>(settings.windowWidth, settings.windowHeight, settings.windowTitle);
+        m_window   = MakeScope<Window>();
         m_renderer = MakeScope<BatchRenderer>();
         m_input    = MakeScope<Input>();
     }
 
     void App::Run() {
+        m_window->Init(m_settings.windowWidth, m_settings.windowHeight, m_settings.windowTitle);
+        m_renderer->Init();
+
         Init();
 
         while (m_window->Running()) {
@@ -27,6 +30,8 @@ namespace sal {
         }
 
         Shutdown();
+
+        m_window->Shutdown();
     }
 
 }

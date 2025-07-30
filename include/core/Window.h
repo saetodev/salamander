@@ -6,8 +6,8 @@ namespace sal {
 
     class Window {
     public:
-        Window(int width, int height, const char* title);
-        ~Window();
+        void Init(int width, int height, const char* title);
+        void Shutdown();
 
         void SwapBuffers();
         bool Running();

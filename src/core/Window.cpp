@@ -32,7 +32,7 @@ namespace sal {
         App::GetInput().SetMouseButton(button, isDown, wasDown);
     }
 
-    Window::Window(int width, int height, const char* title) {
+    void Window::Init(int width, int height, const char* title) {
         if (!glfwInit()) {
             std::cout << "GLFW init failed" << std::endl;
             std::exit(-1);
@@ -78,7 +78,7 @@ namespace sal {
         m_yscale = (float)realHeight / (float)m_height;
     }
 
-    Window::~Window() {
+    void Window::Shutdown() {
         glfwDestroyWindow(m_handle);
         glfwTerminate();
     }

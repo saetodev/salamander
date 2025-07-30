@@ -94,7 +94,7 @@ namespace sal
         { 0.0f, 1.0f },
     };
 
-    BatchRenderer::BatchRenderer() {
+    void BatchRenderer::Init() {
 
         // generate index buffer
 
