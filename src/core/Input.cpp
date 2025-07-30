@@ -2,8 +2,6 @@
 
 namespace sal {
 
-    static Input s_input;
-
     void Input::Reset() {
         m_keysPressed.fill(false);
         m_keysReleased.fill(false);
@@ -80,9 +78,5 @@ namespace sal {
 
         return m_buttonsReleased[button];
     }
-
-    Input& Input::Get() {
-        return s_input;
-    }
-
+    
 }

@@ -21,8 +21,6 @@ namespace sal {
         bool MouseButtonDown(int button) const;
         bool MouseButtonPressed(int button) const;
         bool MouseButtonReleased(int button) const;
-
-        static Input& Get();
     private:
         static constexpr int KEY_BUFFER_SIZE    = 256;
         static constexpr int BUTTON_BUFFER_SIZE = 8;

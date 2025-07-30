@@ -1,3 +1,4 @@
+#include "core/App.h"
 #include "core/Input.h"
 #include "core/Window.h"
 
@@ -9,26 +10,26 @@
 namespace sal {
 
     static void MousePosCallback(GLFWwindow* handle, double xpos, double ypos) {
-        Window* window = static_cast<Window*>(glfwGetWindowUserPointer(handle));
+        Window& window = App::GetWindow();
 
-        float x = xpos / window->XScale();
-        float y = ypos / window->YScale();
+        float x = xpos / window.XScale();
+        float y = ypos / window.YScale();
 
-        Input::Get().SetMousePosition({ x, y });
+        App::GetInput().SetMousePosition({ x, y });
     }
 
     static void KeyCallback(GLFWwindow* handle, int key, int scancode, int action, int mods) {
         bool isDown  = (action == GLFW_PRESS) || (action == GLFW_REPEAT);
         bool wasDown = (action == GLFW_RELEASE) || (action == GLFW_REPEAT);
         
-        Input::Get().SetKey(key, isDown, wasDown);
+        App::GetInput().SetKey(key, isDown, wasDown);
     }
 
     static void MouseButtonCallback(GLFWwindow* handle, int button, int action, int mods) {
         bool isDown  = (action == GLFW_PRESS) || (action == GLFW_REPEAT);
         bool wasDown = (action == GLFW_RELEASE) || (action == GLFW_REPEAT);
 
-        Input::Get().SetMouseButton(button, isDown, wasDown);
+        App::GetInput().SetMouseButton(button, isDown, wasDown);
     }
 
     Window::Window(int width, int height, const char* title) {
@@ -84,7 +85,7 @@ namespace sal {
 
     void Window::SwapBuffers() {
         //TODO: should this be here?
-        Input::Get().Reset();
+        App::GetInput().Reset();
 
         glfwSwapBuffers(m_handle);
         glfwPollEvents();
