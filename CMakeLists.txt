@@ -40,10 +40,6 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE OpenGL::GL
 )
 
-if (BUILD_EXAMPLE)
-    add_subdirectory("example")
-endif()
-
-if (BUILD_TESTS)
-    add_subdirectory("tests/renderer-stress-test")
+if (BUILD_EXAMPLES)
+    add_subdirectory("examples/Basic")
 endif()
