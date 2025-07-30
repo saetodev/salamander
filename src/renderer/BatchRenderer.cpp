@@ -327,7 +327,7 @@ namespace sal {
         return m_batchMode != BatchMode::None && m_batchMode != mode;
     }
 
-    bool BatchRenderer::RequiresFlushForTexture(Ref<Texture> texture) {
+    bool BatchRenderer::RequiresFlushForTexture(const Ref<Texture>& texture) {
         return m_batchMode != BatchMode::None && m_batchTexture != texture;
     }
 

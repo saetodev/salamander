@@ -49,7 +49,7 @@ namespace sal {
 
         bool RequiresFlushForSpace();
         bool RequiresFlushForMode(BatchMode mode);
-        bool RequiresFlushForTexture(Ref<Texture> texture);
+        bool RequiresFlushForTexture(const Ref<Texture>& texture);
     private:
         // batch state
 
