@@ -58,4 +58,19 @@ namespace sal {
         texture->Use();
     }
 
+    void RenderAPI::BindVertexAttribs(const BufferLayout& layout)
+    {
+        size_t index  = 0;
+        size_t offset = 0;
+
+        for (const BufferElement& element : layout)
+        {
+            glEnableVertexAttribArray(index);
+            glVertexAttribPointer(index, GetShaderDataTypeCompCount(element.type), GL_FLOAT, false, layout.Size(), (const void*)offset);
+
+            index  += 1;
+            offset += GetShaderDataTypeSize(element.type);
+        }
+    }
+
 }

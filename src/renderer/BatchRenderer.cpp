@@ -6,7 +6,8 @@
 
 #include <glad/glad.h>
 
-namespace sal {
+namespace sal
+{
 
     static const char* SHARED_VERTEX_SOURCE = "#version 100\n"
     "\n"
@@ -123,7 +124,8 @@ namespace sal {
         uint32_t whitePixels[] = { 0xffffffff };
         m_whiteTexture         = MakeRef<Texture>(1, 1, &whitePixels);
 
-        m_batchVertexBufferBase = MakeScope<Vertex[]>(MAX_VERTEX_COUNT);
+        m_batchVertexBufferBase = new Vertex[MAX_VERTEX_COUNT];
+        m_batchVertexBufferPtr  = m_batchVertexBufferBase;
 
         // init shaders
 
@@ -175,7 +177,7 @@ namespace sal {
         DrawTexture(texture, { 0.0f, 0.0f, texture->Width(), texture->Height() }, transform, color);
     }
 
-    void BatchRenderer::DrawTexture(const Ref<Texture>& texture, const glm::vec4& source, const glm::mat4& transform, const glm::vec4& color) {
+    void BatchRenderer::DrawTexture(const Ref<Texture>& texture, const glm::vec4& source, const glm::mat4& transform, const glm::vec4& color, const glm::vec2& tilingFactor) {
         if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Quad) || RequiresFlushForTexture(texture)) {
             Flush();
             StartBatch();
@@ -186,12 +188,12 @@ namespace sal {
         glm::mat4 uvTransform  = MakeTransform(glm::vec2(scaledSource.x, scaledSource.y), glm::vec2(scaledSource.z, scaledSource.w), 0.0f);
 
         for (int i = 0; i < VERTICES_PER_QUAD; i++) {
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = transform * QUAD_VERTEX_POSITIONS[i];
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = uvTransform * glm::vec4(QUAD_TEXTURE_COORDS[i], 0.0f, 1.0f);
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = {};
+            m_batchVertexBufferPtr->position      = transform * QUAD_VERTEX_POSITIONS[i];
+            m_batchVertexBufferPtr->color         = color;
+            m_batchVertexBufferPtr->textureCoord  = glm::vec2(uvTransform * glm::vec4(QUAD_TEXTURE_COORDS[i], 0.0f, 1.0f)) * tilingFactor;
+            m_batchVertexBufferPtr->localPosition = {};
 
-            m_batchVertexBufferOffset++;
+            m_batchVertexBufferPtr++;
         }
 
         m_batchMode    = BatchMode::Quad;
@@ -210,12 +212,12 @@ namespace sal {
         glm::mat4 transform = MakeTransform(position, glm::vec2(radius) * 2.0f, 0.0f);
 
         for (int i = 0; i < VERTICES_PER_QUAD; i++) {
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = transform * QUAD_VERTEX_POSITIONS[i];
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = {};
-            m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = QUAD_VERTEX_POSITIONS[i] * 2.0f;
+            m_batchVertexBufferPtr->position      = transform * QUAD_VERTEX_POSITIONS[i];
+            m_batchVertexBufferPtr->color         = color;
+            m_batchVertexBufferPtr->textureCoord  = {};
+            m_batchVertexBufferPtr->localPosition = QUAD_VERTEX_POSITIONS[i] * 2.0f;
 
-            m_batchVertexBufferOffset++;
+            m_batchVertexBufferPtr++;
         }
 
         m_batchMode = BatchMode::Circle;
@@ -230,19 +232,19 @@ namespace sal {
             StartBatch();
         }
 
-        m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = glm::vec4(start, 0.0f, 1.0f);
-        m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
-        m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = {};
-        m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = {};
+        m_batchVertexBufferPtr->position      = glm::vec4(start, 0.0f, 1.0f);
+        m_batchVertexBufferPtr->color         = color;
+        m_batchVertexBufferPtr->textureCoord  = {};
+        m_batchVertexBufferPtr->localPosition = {};
 
-        m_batchVertexBufferOffset++;
+        m_batchVertexBufferPtr++;
 
-        m_batchVertexBufferBase[m_batchVertexBufferOffset].position      = glm::vec4(end, 0.0f, 1.0f);
-        m_batchVertexBufferBase[m_batchVertexBufferOffset].color         = color;
-        m_batchVertexBufferBase[m_batchVertexBufferOffset].textureCoord  = {};
-        m_batchVertexBufferBase[m_batchVertexBufferOffset].localPosition = {};
+        m_batchVertexBufferPtr->position      = glm::vec4(end, 0.0f, 1.0f);
+        m_batchVertexBufferPtr->color         = color;
+        m_batchVertexBufferPtr->textureCoord  = {};
+        m_batchVertexBufferPtr->localPosition = {};
 
-        m_batchVertexBufferOffset++;
+        m_batchVertexBufferPtr++;
 
         m_batchMode = BatchMode::Line;
         m_batchVertexCount += VERTICES_PER_LINE;
@@ -255,7 +257,7 @@ namespace sal {
         m_batchVertexCount = 0;
         m_batchIndexCount  = 0;
 
-        m_batchVertexBufferOffset = 0;
+        m_batchVertexBufferPtr = m_batchVertexBufferBase;
     }
 
     void BatchRenderer::Flush() {
@@ -269,7 +271,7 @@ namespace sal {
 
         m_batchVBO->Use();
         m_batchIBO->Use();
-        m_batchVBO->SetData(batchVertexBufferSize, m_batchVertexBufferBase.get());
+        m_batchVBO->SetData(batchVertexBufferSize, m_batchVertexBufferBase);
         
         switch (m_batchMode) {
             case BatchMode::Quad: {
