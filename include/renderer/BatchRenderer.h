@@ -1,11 +1,11 @@
 #pragma once
 
+#include "renderer/Buffer.h"
 #include "renderer/Camera.h"
 
 namespace sal {
 
-    class VertexBuffer;
-    class IndexBuffer;
+    class Buffer;
     class Shader;
     class Texture;
 
@@ -55,11 +55,12 @@ namespace sal {
 
         Camera m_camera = {};
 
-        BatchMode         m_batchMode    = BatchMode::None;
-        Ref<VertexBuffer> m_batchVBO     = {};
-        Ref<IndexBuffer>  m_batchIBO     = {};
-        Ref<Texture>      m_batchTexture = {};
-        Ref<Texture>      m_whiteTexture = {};
+        BatchMode    m_batchMode    = BatchMode::None;
+        BufferLayout m_bufferLayout = {};
+        Ref<Buffer>  m_batchVBO     = {};
+        Ref<Buffer>  m_batchIBO     = {};
+        Ref<Texture> m_batchTexture = {};
+        Ref<Texture> m_whiteTexture = {};
 
         // shaders
 

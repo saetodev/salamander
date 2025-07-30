@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/BufferLayout.h"
+#include "renderer/Buffer.h"
 
 namespace sal {
 

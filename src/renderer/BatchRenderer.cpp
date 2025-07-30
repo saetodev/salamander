@@ -1,10 +1,8 @@
+#include "renderer/Buffer.h"
 #include "renderer/BatchRenderer.h"
-#include "renderer/BufferLayout.h"
-#include "renderer/IndexBuffer.h"
 #include "renderer/RenderAPI.h"
 #include "renderer/Shader.h"
 #include "renderer/Texture.h"
-#include "renderer/VertexBuffer.h"
 
 #include <glad/glad.h>
 
@@ -114,15 +112,13 @@ namespace sal {
 
         // init buffers
 
-        BufferLayout bufferLayout = {};
+        m_bufferLayout.Push("a_position",      EShaderDataType::FLOAT4);
+        m_bufferLayout.Push("a_color",         EShaderDataType::FLOAT4);
+        m_bufferLayout.Push("a_textureCoord",  EShaderDataType::FLOAT2);
+        m_bufferLayout.Push("a_localPosition", EShaderDataType::FLOAT2);
 
-        bufferLayout.Push("a_position",      DataType::Float4);
-        bufferLayout.Push("a_color",         DataType::Float4);
-        bufferLayout.Push("a_textureCoord",  DataType::Float2);
-        bufferLayout.Push("a_localPosition", DataType::Float2);
-
-        m_batchVBO = MakeRef<VertexBuffer>(sizeof(Vertex) * MAX_VERTEX_COUNT, bufferLayout);
-        m_batchIBO = MakeRef<IndexBuffer>(sizeof(uint16_t) * MAX_INDEX_COUNT, indexBuffer);
+        m_batchVBO = MakeRef<Buffer>(EBufferTarget::VERTEX, sizeof(Vertex) * MAX_VERTEX_COUNT, EBufferUsage::DYNAMIC);
+        m_batchIBO = MakeRef<Buffer>(EBufferTarget::INDEX, sizeof(uint16_t) * MAX_INDEX_COUNT, indexBuffer, EBufferUsage::STATIC);
 
         uint32_t whitePixels[] = { 0xffffffff };
         m_whiteTexture         = MakeRef<Texture>(1, 1, &whitePixels);
@@ -131,9 +127,9 @@ namespace sal {
 
         // init shaders
 
-        m_quadShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, QUAD_FRAGMENT_SOURCE,   bufferLayout);
-        m_circleShader = MakeRef<Shader>(SHARED_VERTEX_SOURCE, CIRCLE_FRAGMENT_SOURCE, bufferLayout);
-        m_lineShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, LINE_FRAGMENT_SOURCE,   bufferLayout);
+        m_quadShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, QUAD_FRAGMENT_SOURCE,   m_bufferLayout);
+        m_circleShader = MakeRef<Shader>(SHARED_VERTEX_SOURCE, CIRCLE_FRAGMENT_SOURCE, m_bufferLayout);
+        m_lineShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, LINE_FRAGMENT_SOURCE,   m_bufferLayout);
     }
 
     void BatchRenderer::Begin(const Camera& camera) {
@@ -273,15 +269,14 @@ namespace sal {
 
         m_batchVBO->Use();
         m_batchIBO->Use();
-
         m_batchVBO->SetData(batchVertexBufferSize, m_batchVertexBufferBase.get());
-        m_batchVBO->BindAttributes();
         
         switch (m_batchMode) {
             case BatchMode::Quad: {
                 m_quadShader->Use();
 
                 RenderAPI::BindTextureUnit(m_batchTexture, 0);
+                RenderAPI::BindVertexAttribs(m_bufferLayout);
 
                 m_quadShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
                 m_quadShader->SetMat4("u_view", m_camera.ViewMatrix());
@@ -294,6 +289,9 @@ namespace sal {
 
             case BatchMode::Circle: {
                 m_circleShader->Use();
+
+                RenderAPI::BindVertexAttribs(m_bufferLayout);
+
                 m_circleShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
                 m_circleShader->SetMat4("u_view", m_camera.ViewMatrix());
 
@@ -306,6 +304,9 @@ namespace sal {
 
             case BatchMode::Line: {
                 m_lineShader->Use();
+
+                RenderAPI::BindVertexAttribs(m_bufferLayout);
+
                 m_lineShader->SetMat4("u_projection", m_camera.ProjectionMatrix());
                 m_lineShader->SetMat4("u_view", m_camera.ViewMatrix());
 

@@ -1,6 +1,7 @@
 #pragma
 
 #include "core/Base.h"
+#include "renderer/Buffer.h"
 
 namespace sal {
 
@@ -31,6 +32,7 @@ namespace sal {
         static void DrawBuffer(Primitive type, size_t count);
         static void DrawBufferIndexed(Primitive type, size_t count);
         static void BindTextureUnit(Ref<Texture> texture, int unit);
+        static void BindVertexAttribs(const BufferLayout& layout);
     };
 
 }

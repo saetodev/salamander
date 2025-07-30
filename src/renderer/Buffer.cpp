@@ -1,77 +1,106 @@
-#include "renderer/IndexBuffer.h"
-#include "renderer/VertexBuffer.h"
+#include "renderer/Buffer.h"
 
 #include <glad/glad.h>
 
-namespace sal {
-
-    VertexBuffer::VertexBuffer(size_t size, const BufferLayout& layout) {
-        glGenBuffers(1, &m_handle);
-        glBindBuffer(GL_ARRAY_BUFFER, m_handle);
-        glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        m_layout = layout;
-    }
-
-    VertexBuffer::VertexBuffer(size_t size, void* data, const BufferLayout& layout) {
-        glGenBuffers(1, &m_handle);
-        glBindBuffer(GL_ARRAY_BUFFER, m_handle);
-        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        m_layout = layout;
-    }
-
-    VertexBuffer::~VertexBuffer() {
-        glDeleteBuffers(1, &m_handle);
-    }
-
-    void VertexBuffer::Use() {
-        glBindBuffer(GL_ARRAY_BUFFER, m_handle);
-    }
-
-    void VertexBuffer::SetData(size_t size, void* data) {
-        glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
-    }
-
-    void VertexBuffer::BindAttributes() {
-        int location  = 0;
-        size_t offset = 0;
-
-        for (const Attribute& attribute : m_layout) {
-            glEnableVertexAttribArray(location);
-            glVertexAttribPointer(location, GetDataTypeComponentCount(attribute.type), GL_FLOAT, false, m_layout.Size(), (const void*)offset);
-
-            location += 1;
-            offset   += GetDataTypeSize(attribute.type);
+namespace sal
+{
+    static GLenum GetGLTarget(EBufferTarget target)
+    {
+        switch (target)
+        {
+            case EBufferTarget::VERTEX: return GL_ARRAY_BUFFER;
+            case EBufferTarget::INDEX: return GL_ELEMENT_ARRAY_BUFFER;
         }
+
+        ASSERT(false);
+        return 0;
     }
 
-    IndexBuffer::IndexBuffer(size_t size) {
+    static GLenum GetGLUsage(EBufferUsage usage)
+    {
+        switch (usage)
+        {
+            case EBufferUsage::STATIC: return GL_STATIC_DRAW;
+            case EBufferUsage::DYNAMIC: return GL_DYNAMIC_DRAW;
+            case EBufferUsage::STREAM: return GL_STREAM_DRAW;
+        }
+
+        ASSERT(false);
+        return 0;
+    }
+
+    size_t GetShaderDataTypeSize(EShaderDataType type)
+    {
+        switch (type)
+        {
+            case EShaderDataType::FLOAT: return sizeof(float);
+            case EShaderDataType::FLOAT2: return sizeof(float) * 2;
+            case EShaderDataType::FLOAT3: return sizeof(float) * 3;
+            case EShaderDataType::FLOAT4: return sizeof(float) * 4;
+        }
+
+        ASSERT(false);
+        return 0;
+    }
+
+    size_t GetShaderDataTypeCompCount(EShaderDataType type)
+    {
+        switch (type)
+        {
+            case EShaderDataType::FLOAT: return 1;
+            case EShaderDataType::FLOAT2: return 2;
+            case EShaderDataType::FLOAT3: return 3;
+            case EShaderDataType::FLOAT4: return 4;
+        }
+
+        ASSERT(false);
+        return 0;
+    }
+
+    void BufferLayout::Push(const std::string& name, EShaderDataType type)
+    {
+        m_size += GetShaderDataTypeSize(type);
+        m_elements.emplace_back(name, type);
+    }
+
+    Buffer::Buffer(EBufferTarget target, size_t size, EBufferUsage usage)
+    {
+        GLenum glTarget = GetGLTarget(target);
+
         glGenBuffers(1, &m_handle);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_handle);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindBuffer(glTarget, m_handle);
+        glBufferData(glTarget, size, NULL, GetGLUsage(usage));
+
+        glBindBuffer(glTarget, 0);
+
+        m_target = target;
     }
 
-    IndexBuffer::IndexBuffer(size_t size, void* data) {
+    Buffer::Buffer(EBufferTarget target, size_t size, void* data, EBufferUsage usage)
+    {
+        GLenum glTarget = GetGLTarget(target);
+
         glGenBuffers(1, &m_handle);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_handle);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindBuffer(glTarget, m_handle);
+        glBufferData(glTarget, size, data, GetGLUsage(usage));
+
+        glBindBuffer(glTarget, 0);
+
+        m_target = target;
     }
 
-    IndexBuffer::~IndexBuffer() {
+    Buffer::~Buffer()
+    {
         glDeleteBuffers(1, &m_handle);
     }
 
-    void IndexBuffer::Use() {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_handle);
+    void Buffer::Use()
+    {
+        glBindBuffer(GetGLTarget(m_target), m_handle);
     }
 
-    void IndexBuffer::SetData(size_t size, void* data) {
-        glBufferSubData(m_handle, 0, size, data);
+    void Buffer::SetData(size_t size, void* data)
+    {
+        glBufferSubData(GetGLTarget(m_target), 0, size, data);
     }
-
 }

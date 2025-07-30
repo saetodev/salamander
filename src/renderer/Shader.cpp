@@ -61,8 +61,9 @@ namespace sal {
 
         int location = 0;
 
-        for (const Attribute& attribute : layout) {
-            glBindAttribLocation(m_handle, location, attribute.name.c_str());
+        for (const BufferElement& element : layout)
+        {
+            glBindAttribLocation(m_handle, location, element.name.c_str());
             location++;
         }
 
