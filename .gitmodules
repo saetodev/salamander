@@ -7,3 +7,6 @@
 [submodule "vendor/stb"]
 	path = vendor/stb
 	url = https://github.com/saetodev/stb
+[submodule "vendor/miniaudio"]
+	path = vendor/miniaudio
+	url = https://github.com/mackron/miniaudio

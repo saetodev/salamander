@@ -1,7 +1,8 @@
+#include "audio/AudioDevice.h"
 #include "core/App.h"
 #include "core/Window.h"
-#include "renderer/BatchRenderer.h"
 #include "core/Input.h"
+#include "renderer/BatchRenderer.h"
 
 namespace sal {
 
@@ -13,11 +14,13 @@ namespace sal {
         m_window   = MakeScope<Window>();
         m_renderer = MakeScope<BatchRenderer>();
         m_input    = MakeScope<Input>();
+        m_audio    = MakeScope<AudioDevice>();
     }
 
     void App::Run() {
         m_window->Init(m_settings.windowWidth, m_settings.windowHeight, m_settings.windowTitle);
         m_renderer->Init();
+        m_audio->Init();
 
         Init();
 
@@ -31,6 +34,7 @@ namespace sal {
 
         Shutdown();
 
+        m_audio->Shutdown();
         m_window->Shutdown();
     }
 

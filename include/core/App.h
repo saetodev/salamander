@@ -4,9 +4,10 @@
 
 namespace sal {
 
-    struct Window;
-    struct BatchRenderer;
-    struct Input;
+    class Window;
+    class BatchRenderer;
+    class Input;
+    class AudioDevice;
 
     struct Settings {
         int         windowWidth  = 640;
@@ -17,6 +18,7 @@ namespace sal {
     class App {
     public:
         App(const Settings& settings = {});
+        //virtual ~App() = default;
 
         void Run();
 
@@ -33,6 +35,7 @@ namespace sal {
         Scope<Window>        m_window   = {};
         Scope<BatchRenderer> m_renderer = {};
         Scope<Input>         m_input    = {};
+        Scope<AudioDevice>   m_audio    = {};
 
         static inline App* s_instance = nullptr;
     };

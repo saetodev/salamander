@@ -57,7 +57,6 @@ namespace sal {
     }
 
     Ref<Texture> Texture::Load(std::string_view filename, bool verticalFlip) {
-        //TODO: this should be in some settings config
         stbi_set_flip_vertically_on_load(verticalFlip);
 
         int width  = 0;

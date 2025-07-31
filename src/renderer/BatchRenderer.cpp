@@ -132,6 +132,10 @@ namespace sal
         m_quadShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, QUAD_FRAGMENT_SOURCE,   m_bufferLayout);
         m_circleShader = MakeRef<Shader>(SHARED_VERTEX_SOURCE, CIRCLE_FRAGMENT_SOURCE, m_bufferLayout);
         m_lineShader   = MakeRef<Shader>(SHARED_VERTEX_SOURCE, LINE_FRAGMENT_SOURCE,   m_bufferLayout);
+
+        // cleanup
+
+        delete[] indexBuffer;
     }
 
     void BatchRenderer::Begin(const Camera& camera) {

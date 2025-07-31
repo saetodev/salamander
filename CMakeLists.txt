@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # === Dependencies ===
+add_subdirectory("vendor/miniaudio")
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/glm)
 add_subdirectory(vendor/glad)
@@ -14,6 +15,7 @@ find_package(OpenGL REQUIRED)
 
 # === Sources ===
 add_library(${PROJECT_NAME}
+    "src/audio/AudioDevice.cpp"
     "src/core/App.cpp"
     "src/core/Input.cpp"
     "src/core/Window.cpp"
@@ -36,10 +38,10 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC glfw glm glad
+    PUBLIC miniaudio glfw glm glad
     PRIVATE OpenGL::GL
 )
 
 if (BUILD_EXAMPLES)
-    add_subdirectory("examples/Basic")
+    add_subdirectory("examples/space-invaders")
 endif()
