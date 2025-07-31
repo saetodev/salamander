@@ -1,6 +1,7 @@
 #pragma once
 
 #include "audio/AudioDevice.h"
+#include "audio/Sound.h"
 
 #include "core/App.h"
 #include "core/Input.h"

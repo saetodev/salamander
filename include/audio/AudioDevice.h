@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Base.h"
+
 #include <miniaudio.h>
 
 namespace sal
@@ -10,6 +12,9 @@ namespace sal
         void Init();
         void Shutdown();
     private:
+        friend class Sound;
+        //friend class Music;
+
         ma_engine m_engine = {};
     };
 }

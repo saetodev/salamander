@@ -16,6 +16,7 @@ find_package(OpenGL REQUIRED)
 # === Sources ===
 add_library(${PROJECT_NAME}
     "src/audio/AudioDevice.cpp"
+    "src/audio/Sound.cpp"
     "src/core/App.cpp"
     "src/core/Input.cpp"
     "src/core/Window.cpp"

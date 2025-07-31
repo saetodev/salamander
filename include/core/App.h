@@ -29,6 +29,7 @@ namespace sal {
         static Window& GetWindow() { return *s_instance->m_window; }
         static BatchRenderer& GetRenderer() { return *s_instance->m_renderer; }
         static Input& GetInput() { return *s_instance->m_input; }
+        static AudioDevice& GetAudio() { return *s_instance->m_audio; }
     private:
         Settings m_settings = {};
 

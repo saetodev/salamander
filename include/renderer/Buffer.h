@@ -4,21 +4,21 @@
 
 namespace sal
 {
-    enum EBufferTarget
+    enum class EBufferTarget
     {
         NONE,
         VERTEX,
         INDEX,
     };
 
-    enum EBufferUsage
+    enum class EBufferUsage
     {
         STATIC,
         DYNAMIC,
         STREAM,
     };
 
-    enum EShaderDataType
+    enum class EShaderDataType
     {
         FLOAT,
         FLOAT2,
