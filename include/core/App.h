@@ -18,7 +18,7 @@ namespace sal {
     class App {
     public:
         App(const Settings& settings = {});
-        //virtual ~App() = default;
+        virtual ~App() = default;
 
         void Run();
 
