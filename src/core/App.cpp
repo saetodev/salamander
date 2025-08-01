@@ -35,6 +35,7 @@ namespace sal {
         Shutdown();
 
         m_audio->Shutdown();
+        m_renderer->Shutdown();
         m_window->Shutdown();
     }
 

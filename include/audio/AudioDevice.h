@@ -15,6 +15,7 @@ namespace sal
         friend class Sound;
         //friend class Music;
 
-        ma_engine m_engine = {};
+        ma_context m_context = {};
+        ma_engine  m_engine  = {};
     };
 }

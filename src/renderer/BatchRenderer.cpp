@@ -138,6 +138,13 @@ namespace sal
         delete[] indexBuffer;
     }
 
+    void BatchRenderer::Shutdown()
+    {
+        delete[] m_batchVertexBufferBase;
+        
+        *this = {};
+    }
+
     void BatchRenderer::Begin(const Camera& camera) {
         m_camera = camera;
         m_numDrawCalls = 0;

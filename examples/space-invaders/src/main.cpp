@@ -27,17 +27,13 @@ public:
 
     void Shutdown() override
     {
-        
+        m_sound.reset();
+        m_music.reset();
     }
 
     void Update(float delta)
     {
         sal::Input input = sal::App::GetInput();
-
-        if (input.KeyPressed(' '))
-        {
-            m_sound->Play();
-        }
 
         float xvel = (input.KeyDown('D') - input.KeyDown('A')) * 200.0f;
 

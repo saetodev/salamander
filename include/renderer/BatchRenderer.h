@@ -21,6 +21,7 @@ namespace sal {
     class BatchRenderer {
     public:
         void Init();
+        void Shutdown();
 
         void Begin(const Camera& camera);
         void End();
