@@ -1,0 +1,7 @@
+CompileFlags:
+  Add:
+    - "-std=c++20"
+    - "-IC:/Users/domin/Desktop/salamander/include"
+    - "-IC:/Users/domin/Desktop/salamander/vendor/glm"
+    - "-IC:/Users/domin/Desktop/salamander/vendor/miniaudio"
+    - "-IC:/Users/domin/Desktop/salamander/vendor/stb"
