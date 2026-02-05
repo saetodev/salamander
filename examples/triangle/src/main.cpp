@@ -21,9 +21,16 @@ static const char* fragmentSource = "#version 100"
 class Triangle : public App {
 public:
     void Init() {
-        m_layout.names.emplace_back("a_position");
-        m_layout.formats.emplace_back(gpu::VertexFormat::FLOAT2);
-        m_layout.size = sizeof(float) * 2;
+        m_layout = {
+            .count      = 1,
+            .size       = sizeof(float) * 2,
+            .attributes = new gpu::VertexAttribute[1],
+        };
+
+        m_layout.attributes[0] = {
+            .format = gpu::VertexFormat::FLOAT2,
+            .name   = "a_position",
+        };
 
         gpu::ShaderDesc shaderDesc = {
             .vertexSource   = vertexSource,

@@ -107,11 +107,8 @@ namespace sal::gpu {
     Shader createShader(ShaderDesc desc) {
         GLint result = GL_FALSE;
 
-        const char* vertexSource   = desc.vertexSource.c_str();
-        const char* fragmentSource = desc.fragmentSource.c_str(); 
-
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexSource, NULL);
+        glShaderSource(vertexShader, 1, &desc.vertexSource, NULL);
         glCompileShader(vertexShader);
 
         //TODO: handle this properly
@@ -119,7 +116,7 @@ namespace sal::gpu {
         ASSERT(result);
 
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+        glShaderSource(fragmentShader, 1, &desc.fragmentSource, NULL);
         glCompileShader(fragmentShader);
 
         //TODO: handle this properly
@@ -128,8 +125,8 @@ namespace sal::gpu {
 
         GLuint program = glCreateProgram();
 
-        for (int i = 0; i < desc.layout.names.size(); i++) {
-            glBindAttribLocation(program, i, desc.layout.names[i].c_str());
+        for (int i = 0; i < desc.layout.count; i++) {
+            glBindAttribLocation(program, i, desc.layout.attributes[i].name);
         }
 
         glAttachShader(program, vertexShader);
@@ -148,6 +145,31 @@ namespace sal::gpu {
 
     void destroyShader(Shader shader) {
         glDeleteProgram((GLuint)shader);
+    }
+
+    void setShaderUniform(Shader shader, const char* name, float value) {
+        int loc = glGetUniformLocation((GLuint)shader, name);
+        glUniform1f(loc, value);
+    }
+
+    void setShaderUniform(Shader shader, const char* name, glm::vec2 value) {
+        int loc = glGetUniformLocation((GLuint)shader, name);
+        glUniform2fv(loc, 1, glm::value_ptr(value));
+    }
+
+    void setShaderUniform(Shader shader, const char* name, glm::vec3 value) {
+        int loc = glGetUniformLocation((GLuint)shader, name);
+        glUniform3fv(loc, 1, glm::value_ptr(value));
+    }
+
+    void setShaderUniform(Shader shader, const char* name, glm::vec4 value) {
+        int loc = glGetUniformLocation((GLuint)shader, name);
+        glUniform4fv(loc, 1, glm::value_ptr(value));
+    }
+
+    void setShaderUniform(Shader shader, const char* name, glm::mat4 value) {
+        int loc = glGetUniformLocation((GLuint)shader, name);
+        glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
     }
 
     Texture createTexture(TextureDesc desc) {
@@ -208,8 +230,8 @@ namespace sal::gpu {
     void bind(const VertexLayout& layout) {
         size_t offset = 0;
         
-        for (uint32_t i = 0; i < layout.formats.size(); i++) {
-            VertexFormat format = layout.formats[i];
+        for (uint32_t i = 0; i < layout.count; i++) {
+            VertexFormat format = layout.attributes[i].format;
             GLint count = glVertexFormatCount(format);
             GLenum type = glVertexFormat(format);
 

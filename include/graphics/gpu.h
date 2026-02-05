@@ -51,15 +51,20 @@ namespace sal::gpu {
         ALPHA,
     };
 
+    struct VertexAttribute {
+        VertexFormat format;
+        const char*  name;
+    };
+
     struct VertexLayout {
-        std::vector<std::string>  names;
-        std::vector<VertexFormat> formats;
-        size_t                    size;
+        size_t           count;
+        size_t           size;
+        VertexAttribute* attributes;
     };
 
     struct ShaderDesc {
-        std::string  vertexSource;
-        std::string  fragmentSource;
+        const char*  vertexSource;
+        const char*  fragmentSource;
         VertexLayout layout;
     };
 
@@ -81,6 +86,12 @@ namespace sal::gpu {
 
     Shader createShader(ShaderDesc desc);
     void destroyShader(Shader shader);
+
+    void setShaderUniform(Shader shader, const char* name, float value);
+    void setShaderUniform(Shader shader, const char* name, glm::vec2 value);
+    void setShaderUniform(Shader shader, const char* name, glm::vec3 value);
+    void setShaderUniform(Shader shader, const char* name, glm::vec4 value);
+    void setShaderUniform(Shader shader, const char* name, glm::mat4 value);
 
     Texture createTexture(TextureDesc desc);
     void destroyTexture(Texture texture);
