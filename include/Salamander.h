@@ -11,3 +11,5 @@
 #include "renderer/Camera.h"
 #include "renderer/RenderAPI.h"
 #include "renderer/Texture.h"
+
+#include "graphics/gpu.h"
