@@ -12,6 +12,8 @@ namespace sal {
         void SwapBuffers();
         bool Running();
 
+        void SetSize(int width, int height);
+
         int Width() const { return m_width; }
         int Height() const { return m_height; }
 

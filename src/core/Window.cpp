@@ -32,6 +32,15 @@ namespace sal {
         App::GetInput().SetMouseButton(button, isDown, wasDown);
     }
 
+    static void WindowSizeCallback(GLFWwindow* handle, int width, int height) {
+        App::GetWindow().SetSize(width, height);
+    }
+
+    static void FrameBufferSizeCallback(GLFWwindow* handle, int width, int height) {
+        //TODO: hack
+        glViewport(0, 0, width, height);
+    }
+
     void Window::Init(int width, int height, const char* title) {
         if (!glfwInit()) {
             const char* message = NULL;
@@ -41,7 +50,7 @@ namespace sal {
             std::exit(-1);
         }
 
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
         glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
@@ -65,6 +74,8 @@ namespace sal {
         glfwSetCursorPosCallback(m_handle, MousePosCallback);
         glfwSetKeyCallback(m_handle, KeyCallback);
         glfwSetMouseButtonCallback(m_handle, MouseButtonCallback);
+        glfwSetWindowSizeCallback(m_handle, WindowSizeCallback);
+        glfwSetFramebufferSizeCallback(m_handle, FrameBufferSizeCallback);
 
         glfwMakeContextCurrent(m_handle);
         glfwSwapInterval(0);
@@ -75,16 +86,7 @@ namespace sal {
             std::exit(-1);
         }
 
-        m_width  = width;
-        m_height = height;
-
-        int realWidth  = 0;
-        int realHeight = 0;
-
-        glfwGetWindowSize(m_handle, &realWidth, &realHeight);
-
-        m_xscale = (float)realWidth / (float)m_width;
-        m_yscale = (float)realHeight / (float)m_height;
+        SetSize(width, height);
     }
 
     void Window::Shutdown() {
@@ -106,6 +108,19 @@ namespace sal {
 
     bool Window::Running() {
         return !glfwWindowShouldClose(m_handle);
+    }
+
+    void Window::SetSize(int width, int height) {
+        m_width  = width;
+        m_height = height;
+
+        int realWidth  = 0;
+        int realHeight = 0;
+
+        glfwGetWindowSize(m_handle, &realWidth, &realHeight);
+
+        m_xscale = (float)realWidth / (float)m_width;
+        m_yscale = (float)realHeight / (float)m_height;
     }
     
 }

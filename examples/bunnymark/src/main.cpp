@@ -72,12 +72,22 @@ private:
             glm::vec2 min = entity.position - entity.size * 0.5f;
             glm::vec2 max = entity.position + entity.size * 0.5f;
 
-            if (min.x < 0.0f || max.x >= window.Width()) {
+            if (min.x < 0.0f) {
                 entity.velocity.x *= -1.0f;
+                entity.position.x = entity.size.x * 0.5f;
+            }
+            else if (max.x > window.Width()) {
+                entity.velocity.x *= -1.0f;
+                entity.position.x = window.Width() - entity.size.x * 0.5f;
             }
 
-            if (min.y < 0.0f || max.y >= window.Height()) {
+            if (min.y < 0.0f) {
                 entity.velocity.y *= -1.0f;
+                entity.position.y = entity.size.y * 0.5f;
+            }
+            else if (max.y > window.Height()) {
+                entity.velocity.y *= -1.0f;
+                entity.position.y = window.Height() - entity.size.y * 0.5f;
             }
         }
     }

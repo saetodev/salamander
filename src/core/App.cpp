@@ -36,8 +36,8 @@ namespace sal {
             .filter = gpu::TextureFilter::NEAREST,
             .wrap   = gpu::TextureWrap::CLAMP,
             .format = gpu::PixelFormat::RGBA,
-            .width  = width,
-            .height = height,
+            .width  = (uint32_t)width,
+            .height = (uint32_t)height,
             .pixels = data,
         };
 
