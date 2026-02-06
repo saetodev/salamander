@@ -20,12 +20,9 @@ add_library(${PROJECT_NAME}
     "src/core/App.cpp"
     "src/core/Input.cpp"
     "src/core/Window.cpp"
-    "src/renderer/BatchRenderer.cpp"
-    "src/renderer/Buffer.cpp"
-    "src/renderer/Camera.cpp"
-    "src/renderer/RenderAPI.cpp"
-    "src/renderer/Shader.cpp"
-    "src/renderer/Texture.cpp"
+    "src/graphics/gpu.cpp"
+    "src/graphics/Renderer2D.cpp"
+    "src/graphics/Camera.cpp"
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -44,5 +41,6 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if (BUILD_EXAMPLES)
-    add_subdirectory("examples/space-invaders")
+    add_subdirectory("examples/bunnymark")
+    add_subdirectory("examples/triangle")
 endif()

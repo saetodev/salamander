@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <array>
 #include <iostream>
 #include <memory>
@@ -10,7 +11,8 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define ASSERT(x) do { if (!(x)) { __debugbreak(); } } while (0)
+//#define ASSERT(x) do { if (!(x)) { __debugbreak(); } } while (0)
+#define ASSERT(x) assert(x)
 
 namespace sal {
 

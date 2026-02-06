@@ -1,4 +1,4 @@
-#include "renderer/Camera.h"
+#include "graphics/Camera.h"
 
 namespace sal {
 

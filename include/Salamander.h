@@ -7,9 +7,6 @@
 #include "core/Input.h"
 #include "core/Window.h"
 
-#include "renderer/BatchRenderer.h"
-#include "renderer/Camera.h"
-#include "renderer/RenderAPI.h"
-#include "renderer/Texture.h"
-
+#include "graphics/Camera.h"
 #include "graphics/gpu.h"
+#include "graphics/Renderer2D.h"

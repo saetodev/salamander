@@ -96,8 +96,10 @@ namespace sal
         }
 
         desc.format = GetAudioFormat(format);
-
-        result = ma_decoder_get_length_in_pcm_frames(&decoder, &desc.frameCount);
+        
+        ma_uint64 frameCount = 0;
+        result = ma_decoder_get_length_in_pcm_frames(&decoder, &frameCount);
+        desc.frameCount = frameCount;
 
         if (result != MA_SUCCESS)
         {

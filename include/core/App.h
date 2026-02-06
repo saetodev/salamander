@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Base.h"
+#include "Salamander.h"
 
 namespace sal {
 
@@ -8,6 +9,7 @@ namespace sal {
     class BatchRenderer;
     class Input;
     class AudioDevice;
+    class Renderer2D;
 
     struct Settings {
         int         windowWidth  = 640;
@@ -27,14 +29,14 @@ namespace sal {
         virtual void Update(float delta) = 0;
 
         static Window& GetWindow() { return *s_instance->m_window; }
-        static BatchRenderer& GetRenderer() { return *s_instance->m_renderer; }
+        static Renderer2D& GetRenderer() { return *s_instance->m_renderer; }
         static Input& GetInput() { return *s_instance->m_input; }
         static AudioDevice& GetAudio() { return *s_instance->m_audio; }
     private:
         Settings m_settings = {};
 
         Scope<Window>        m_window   = {};
-        Scope<BatchRenderer> m_renderer = {};
+        Scope<Renderer2D> m_renderer = {};
         Scope<Input>         m_input    = {};
         Scope<AudioDevice>   m_audio    = {};
 

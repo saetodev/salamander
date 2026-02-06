@@ -60,6 +60,8 @@ namespace sal {
         glfwSetMouseButtonCallback(m_handle, MouseButtonCallback);
 
         glfwMakeContextCurrent(m_handle);
+        glfwSwapInterval(0);
+        glfwShowWindow(m_handle);
 
         if (!gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress)) {
             std::cout << "GLAD GLES2 loader failed" << std::endl;

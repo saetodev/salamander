@@ -4,10 +4,9 @@
 #include "core/Base.h"
 
 namespace sal::gpu {
-    //TODO: replace these with structs for stronger typing
-    using Shader  = uint32_t;
-    using Texture = uint32_t;
-    using Buffer  = uint32_t;
+    struct Shader { uint32_t id; };
+    struct Texture { uint32_t id; };
+    struct Buffer { uint32_t id; };
 
     enum class VertexFormat {
         FLOAT,
@@ -56,6 +55,8 @@ namespace sal::gpu {
         const char*  name;
     };
 
+    //NOTE: the underlying VertexAttribute array should be
+    //      allocated on the heap
     struct VertexLayout {
         size_t           count;
         size_t           size;
@@ -98,6 +99,7 @@ namespace sal::gpu {
 
     Buffer createBuffer(BufferDesc desc);
     void destroyBuffer(Buffer buffer);
+    void setBufferData(BufferType type, Buffer, size_t size, void* data);
 
     void bind(Shader shader);
     void bind(uint32_t unit, Texture texture);

@@ -2,7 +2,7 @@
 #include "core/App.h"
 #include "core/Window.h"
 #include "core/Input.h"
-#include "renderer/BatchRenderer.h"
+#include "graphics/Renderer2D.h"
 
 namespace sal {
 
@@ -12,7 +12,7 @@ namespace sal {
         m_settings = settings;
 
         m_window   = MakeScope<Window>();
-        m_renderer = MakeScope<BatchRenderer>();
+        m_renderer = MakeScope<Renderer2D>();
         m_input    = MakeScope<Input>();
         m_audio    = MakeScope<AudioDevice>();
     }

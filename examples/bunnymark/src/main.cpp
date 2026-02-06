@@ -19,27 +19,31 @@ public:
     }
 
     void Update(float delta) {
-        std::cout << "delta: " << delta * 1000.0f << " ms\n";
-        std::cout << "count: " << m_entities.size() << "\n\n";
+        std::cout << "delta:   " << delta * 1000.0f << " ms\n";
+        std::cout << "count:   " << m_entities.size() << "\n";
+        std::cout << "batches: " << sal::App::GetRenderer().NumDrawCalls() << "\n\n";
 
         sal::Input& input = sal::App::GetInput();
 
         if (input.MouseButtonDown(0)) {
             glm::vec2 mousePos = input.MousePosition();
            
-            float dx = (std::rand() % 3) - 1;
-            float dy = (std::rand() % 3) - 1;
+            for (int i = 0; i < 10; i++) {
+                float dx = (std::rand() % 3) - 1;
+                float dy = (std::rand() % 3) - 1;
 
-            float r = (std::rand() % 256) / 255.0f;
-            float g = (std::rand() % 256) / 255.0f;
-            float b = (std::rand() % 256) / 255.0f;
+                float r = (std::rand() % 256) / 255.0f;
+                float g = (std::rand() % 256) / 255.0f;
+                float b = (std::rand() % 256) / 255.0f;
 
-            m_entities.emplace_back(mousePos, glm::vec2(100.0f * dx, 100.0f * dy), glm::vec2(32.0f, 32.0f), glm::vec4(r, g, b, 1.0f));
+                m_entities.emplace_back(mousePos, glm::vec2(100.0f * dx, 100.0f * dy), glm::vec2(32.0f, 32.0f), glm::vec4(r, g, b, 1.0f));
+            }
         }
 
         UpdateEntities(delta);
 
-        sal::RenderAPI::Clear(sal::Color::BLACK);
+        sal::gpu::clear(0.0f, 0.0f, 0.0f, 1.0f);
+        
         RenderEntities();
     }
 private:
@@ -63,7 +67,7 @@ private:
     }
 
     void RenderEntities() {
-        sal::BatchRenderer& renderer = sal::App::GetRenderer();
+        sal::Renderer2D& renderer = sal::App::GetRenderer();
 
         renderer.Begin(m_camera);
 

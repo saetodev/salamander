@@ -140,35 +140,35 @@ namespace sal::gpu {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        return program;
+        return { .id = program };
     }
 
     void destroyShader(Shader shader) {
-        glDeleteProgram((GLuint)shader);
+        glDeleteProgram((GLuint)shader.id);
     }
 
     void setShaderUniform(Shader shader, const char* name, float value) {
-        int loc = glGetUniformLocation((GLuint)shader, name);
+        int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniform1f(loc, value);
     }
 
     void setShaderUniform(Shader shader, const char* name, glm::vec2 value) {
-        int loc = glGetUniformLocation((GLuint)shader, name);
+        int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniform2fv(loc, 1, glm::value_ptr(value));
     }
 
     void setShaderUniform(Shader shader, const char* name, glm::vec3 value) {
-        int loc = glGetUniformLocation((GLuint)shader, name);
+        int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniform3fv(loc, 1, glm::value_ptr(value));
     }
 
     void setShaderUniform(Shader shader, const char* name, glm::vec4 value) {
-        int loc = glGetUniformLocation((GLuint)shader, name);
+        int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniform4fv(loc, 1, glm::value_ptr(value));
     }
 
     void setShaderUniform(Shader shader, const char* name, glm::mat4 value) {
-        int loc = glGetUniformLocation((GLuint)shader, name);
+        int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
     }
 
@@ -189,7 +189,7 @@ namespace sal::gpu {
         glTexImage2D(GL_TEXTURE_2D, 0, format, desc.width, desc.height, 0, format, GL_UNSIGNED_BYTE, desc.pixels);
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        return (Texture)texture;
+        return { .id = texture };
     }
 
     void destroyTexture(Texture texture) {
@@ -206,25 +206,29 @@ namespace sal::gpu {
         glBufferData(target, desc.size, desc.data, usage);
         glBindBuffer(target, 0);
 
-        return (Buffer)buffer;
+        return { .id = buffer };
     }
 
     void destroyBuffer(Buffer buffer) {
         glDeleteBuffers(1, (GLuint*)&buffer);
     }
 
+    void setBufferData(BufferType type, Buffer, size_t size, void* data) {
+        glBufferSubData(glBufferType(type), 0, size, data);
+    }
+
     void bind(Shader shader) {
-        glUseProgram((GLuint)shader);
+        glUseProgram((GLuint)shader.id);
     }
 
     void bind(uint32_t unit, Texture texture) {
         ASSERT(unit < 32);
         glActiveTexture(GL_TEXTURE0 + unit);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
     }
 
     void bind(BufferType type, Buffer buffer) {
-        glBindBuffer(glBufferType(type), (GLuint)buffer);
+        glBindBuffer(glBufferType(type), (GLuint)buffer.id);
     }
 
     void bind(const VertexLayout& layout) {
