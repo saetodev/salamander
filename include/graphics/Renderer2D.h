@@ -52,21 +52,21 @@ namespace sal {
 
         bool RequiresFlushForSpace();
         bool RequiresFlushForMode(BatchMode mode);
-        bool RequiresFlushForTexture(gpu::TextureHandle texture);
+        bool RequiresFlushForTexture(Ref<Texture> texture);
     private:
         Camera m_camera = {};
 
-        BatchMode          m_batchMode    = BatchMode::None;
-        gpu::TextureHandle m_batchTexture = {};
+        BatchMode    m_batchMode    = BatchMode::None;
+        Ref<Texture> m_batchTexture = {};
 
-        gpu::VertexLayout   m_layout       = {};
-        Scope<VertexBuffer> m_batchVBO     = {};
-        Scope<IndexBuffer>  m_batchIBO     = {};
-        Ref<Texture>        m_whiteTexture = {};
+        gpu::VertexLayout m_layout       = {};
+        Ref<VertexBuffer> m_batchVBO     = {};
+        Ref<IndexBuffer>  m_batchIBO     = {};
+        Ref<Texture>      m_whiteTexture = {};
 
-        Scope<Shader> m_quadShader   = {};
-        Scope<Shader> m_circleShader = {};
-        Scope<Shader> m_lineShader   = {};
+        Ref<Shader> m_quadShader   = {};
+        Ref<Shader> m_circleShader = {};
+        Ref<Shader> m_lineShader   = {};
 
         Vertex* m_vertexBufferBase = nullptr;
         Vertex* m_vertexBufferPtr  = nullptr;

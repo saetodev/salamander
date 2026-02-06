@@ -2,9 +2,7 @@
 
 #include <glad/glad.h>
 
-namespace sal
-{
-
+namespace sal {
     static const char* SHARED_VERTEX_SOURCE = "#version 100\n"
     "\n"
     "attribute vec4 a_position;\n"
@@ -69,10 +67,9 @@ namespace sal
 
     static constexpr int VERTICES_PER_QUAD = 4;
     static constexpr int INDICES_PER_QUAD  = 6;
-
     static constexpr int VERTICES_PER_LINE = 2;
 
-    static constexpr int MAX_QUAD_COUNT   = 10000;
+    static constexpr int MAX_QUAD_COUNT   = 8192; // 2^13
     static constexpr int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * VERTICES_PER_QUAD;
     static constexpr int MAX_INDEX_COUNT  = MAX_QUAD_COUNT * INDICES_PER_QUAD;
 
@@ -150,8 +147,8 @@ namespace sal
             .data  = indexBuffer,
         };
 
-        m_batchVBO = MakeScope<VertexBuffer>(vboDesc);
-        m_batchIBO = MakeScope<IndexBuffer>(iboDesc);
+        m_batchVBO = MakeRef<VertexBuffer>(vboDesc);
+        m_batchIBO = MakeRef<IndexBuffer>(iboDesc);
 
         m_vertexBufferBase = new Vertex[MAX_VERTEX_COUNT];
         m_vertexBufferPtr  = m_vertexBufferBase;
@@ -191,9 +188,9 @@ namespace sal
             .layout         = m_layout,
         };
 
-        m_quadShader   = MakeScope<Shader>(quadShaderDesc);
-        m_circleShader = MakeScope<Shader>(circleShaderDesc);
-        m_lineShader   = MakeScope<Shader>(lineShaderDesc);
+        m_quadShader   = MakeRef<Shader>(quadShaderDesc);
+        m_circleShader = MakeRef<Shader>(circleShaderDesc);
+        m_lineShader   = MakeRef<Shader>(lineShaderDesc);
 
         // cleanup
 
@@ -237,7 +234,7 @@ namespace sal
     }
 
     void Renderer2D::DrawTexture(Ref<Texture> texture, glm::vec2 position, glm::vec2 size, float rotation, glm::vec4 color) {
-        if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Quad) || RequiresFlushForTexture(texture->handle())) {
+        if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Quad) || RequiresFlushForTexture(texture)) {
             Flush();
             StartBatch();
         }
@@ -258,7 +255,7 @@ namespace sal
         }
 
         m_batchMode    = BatchMode::Quad;
-        m_batchTexture = texture->handle();
+        m_batchTexture = texture;
 
         m_vertexCount += VERTICES_PER_QUAD;
         m_indexCount  += INDICES_PER_QUAD;
@@ -336,7 +333,7 @@ namespace sal
         switch (m_batchMode) {
             case BatchMode::Quad: {
                 gpu::bind(m_quadShader->handle());
-                gpu::bind(0, m_batchTexture);
+                gpu::bind(0, m_batchTexture->handle());
 
                 gpu::setShaderUniform(m_quadShader->handle(), "u_projection", m_camera.ProjectionMatrix());
                 gpu::setShaderUniform(m_quadShader->handle(), "u_view", m_camera.ViewMatrix());
@@ -381,8 +378,7 @@ namespace sal
         return m_batchMode != BatchMode::None && m_batchMode != mode;
     }
 
-    bool Renderer2D::RequiresFlushForTexture(gpu::TextureHandle texture) {
-        return m_batchMode != BatchMode::None && m_batchTexture.id == texture.id;
+    bool Renderer2D::RequiresFlushForTexture(Ref<Texture> texture) {
+        return m_batchMode != BatchMode::None && m_batchTexture == texture;
     }
-
 }
