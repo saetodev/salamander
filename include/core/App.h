@@ -24,7 +24,7 @@ namespace sal {
         virtual ~App() = default;
 
         //TODO: texture loading hack
-        gpu::Texture LoadTexture(const char* filename);
+        Ref<Texture> LoadTexture(const char* filename);
 
         void Run();
 

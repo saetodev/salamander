@@ -4,9 +4,9 @@
 #include "core/Base.h"
 
 namespace sal::gpu {
-    struct Shader { uint32_t id; };
-    struct Texture { uint32_t id; };
-    struct Buffer { uint32_t id; };
+    struct ShaderHandle { uint32_t id; };
+    struct TextureHandle { uint32_t id; };
+    struct BufferHandle { uint32_t id; };
 
     enum class VertexFormat {
         FLOAT,
@@ -85,25 +85,25 @@ namespace sal::gpu {
         void*       data;
     };
 
-    Shader createShader(ShaderDesc desc);
-    void destroyShader(Shader shader);
+    ShaderHandle createShader(ShaderDesc desc);
+    void destroyShader(ShaderHandle shader);
 
-    void setShaderUniform(Shader shader, const char* name, float value);
-    void setShaderUniform(Shader shader, const char* name, glm::vec2 value);
-    void setShaderUniform(Shader shader, const char* name, glm::vec3 value);
-    void setShaderUniform(Shader shader, const char* name, glm::vec4 value);
-    void setShaderUniform(Shader shader, const char* name, glm::mat4 value);
+    void setShaderUniform(ShaderHandle shader, const char* name, float value);
+    void setShaderUniform(ShaderHandle shader, const char* name, glm::vec2 value);
+    void setShaderUniform(ShaderHandle shader, const char* name, glm::vec3 value);
+    void setShaderUniform(ShaderHandle shader, const char* name, glm::vec4 value);
+    void setShaderUniform(ShaderHandle shader, const char* name, glm::mat4 value);
 
-    Texture createTexture(TextureDesc desc);
-    void destroyTexture(Texture texture);
+    TextureHandle createTexture(TextureDesc desc);
+    void destroyTexture(TextureHandle texture);
 
-    Buffer createBuffer(BufferDesc desc);
-    void destroyBuffer(Buffer buffer);
-    void setBufferData(BufferType type, Buffer, size_t size, void* data);
+    BufferHandle createBuffer(BufferDesc desc);
+    void destroyBuffer(BufferHandle buffer);
+    void setBufferData(BufferType type, BufferHandle, size_t size, void* data);
 
-    void bind(Shader shader);
-    void bind(uint32_t unit, Texture texture);
-    void bind(BufferType type, Buffer buffer);
+    void bind(ShaderHandle shader);
+    void bind(uint32_t unit, TextureHandle texture);
+    void bind(BufferType type, BufferHandle buffer);
     void bind(const VertexLayout& layout);
 
     void clear(float r, float g, float b, float a);

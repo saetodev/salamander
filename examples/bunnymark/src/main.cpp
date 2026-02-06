@@ -17,7 +17,6 @@ public:
     }
 
     void Shutdown() {
-
     }
 
     void Update(float delta) {
@@ -104,9 +103,9 @@ private:
         renderer.End();
     }
 private:
-    sal::Camera       m_camera  = {};
-    sal::gpu::Texture m_texture = {};
-    std::vector<Entity> m_entities;
+    sal::Camera            m_camera  = {};
+    sal::Ref<sal::Texture> m_texture = {};
+    std::vector<Entity>    m_entities;
 
     float deltaAverage  = 0.0f;
     float deltaAccum    = 0.0f;

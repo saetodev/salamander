@@ -104,7 +104,7 @@ namespace sal::gpu {
         return 0;
     }
 
-    Shader createShader(ShaderDesc desc) {
+    ShaderHandle createShader(ShaderDesc desc) {
         GLint result = GL_FALSE;
 
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -143,36 +143,36 @@ namespace sal::gpu {
         return { .id = program };
     }
 
-    void destroyShader(Shader shader) {
+    void destroyShader(ShaderHandle shader) {
         glDeleteProgram((GLuint)shader.id);
     }
 
-    void setShaderUniform(Shader shader, const char* name, float value) {
+    void setShaderUniform(ShaderHandle shader, const char* name, float value) {
         int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniform1f(loc, value);
     }
 
-    void setShaderUniform(Shader shader, const char* name, glm::vec2 value) {
+    void setShaderUniform(ShaderHandle shader, const char* name, glm::vec2 value) {
         int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniform2fv(loc, 1, glm::value_ptr(value));
     }
 
-    void setShaderUniform(Shader shader, const char* name, glm::vec3 value) {
+    void setShaderUniform(ShaderHandle shader, const char* name, glm::vec3 value) {
         int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniform3fv(loc, 1, glm::value_ptr(value));
     }
 
-    void setShaderUniform(Shader shader, const char* name, glm::vec4 value) {
+    void setShaderUniform(ShaderHandle shader, const char* name, glm::vec4 value) {
         int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniform4fv(loc, 1, glm::value_ptr(value));
     }
 
-    void setShaderUniform(Shader shader, const char* name, glm::mat4 value) {
+    void setShaderUniform(ShaderHandle shader, const char* name, glm::mat4 value) {
         int loc = glGetUniformLocation((GLuint)shader.id, name);
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
     }
 
-    Texture createTexture(TextureDesc desc) {
+    TextureHandle createTexture(TextureDesc desc) {
         GLuint texture = 0;
         GLenum filter  = glTextureFilter(desc.filter);
         GLenum wrap    = glTextureWrap(desc.wrap);
@@ -192,11 +192,11 @@ namespace sal::gpu {
         return { .id = texture };
     }
 
-    void destroyTexture(Texture texture) {
+    void destroyTexture(TextureHandle texture) {
         glDeleteTextures(1, (GLuint*)&texture);
     }
 
-    Buffer createBuffer(BufferDesc desc) {
+    BufferHandle createBuffer(BufferDesc desc) {
         GLuint buffer = 0;
         GLenum target = glBufferType(desc.type);
         GLenum usage  = glDrawBufferUsage(desc.usage);
@@ -209,25 +209,25 @@ namespace sal::gpu {
         return { .id = buffer };
     }
 
-    void destroyBuffer(Buffer buffer) {
+    void destroyBuffer(BufferHandle buffer) {
         glDeleteBuffers(1, (GLuint*)&buffer);
     }
 
-    void setBufferData(BufferType type, Buffer, size_t size, void* data) {
+    void setBufferData(BufferType type, BufferHandle, size_t size, void* data) {
         glBufferSubData(glBufferType(type), 0, size, data);
     }
 
-    void bind(Shader shader) {
+    void bind(ShaderHandle shader) {
         glUseProgram((GLuint)shader.id);
     }
 
-    void bind(uint32_t unit, Texture texture) {
+    void bind(uint32_t unit, TextureHandle texture) {
         ASSERT(unit < 32);
         glActiveTexture(GL_TEXTURE0 + unit);
         glBindTexture(GL_TEXTURE_2D, texture.id);
     }
 
-    void bind(BufferType type, Buffer buffer) {
+    void bind(BufferType type, BufferHandle buffer) {
         glBindBuffer(glBufferType(type), (GLuint)buffer.id);
     }
 

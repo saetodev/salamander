@@ -20,7 +20,7 @@ namespace sal {
         m_audio    = MakeScope<AudioDevice>();
     }
 
-    gpu::Texture App::LoadTexture(const char* filename) {
+    Ref<Texture> App::LoadTexture(const char* filename) {
         int width  = 0;
         int height = 0;
         int comp   = 0;
@@ -41,7 +41,7 @@ namespace sal {
             .pixels = data,
         };
 
-        gpu::Texture texture = gpu::createTexture(texDesc);
+        Ref<Texture> texture = MakeRef<Texture>(texDesc);
         
         stbi_image_free(data);
 

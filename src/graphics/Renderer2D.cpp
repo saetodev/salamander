@@ -150,8 +150,8 @@ namespace sal
             .data  = indexBuffer,
         };
 
-        m_batchVBO = gpu::createBuffer(vboDesc);
-        m_batchIBO = gpu::createBuffer(iboDesc);
+        m_batchVBO = MakeScope<VertexBuffer>(vboDesc);
+        m_batchIBO = MakeScope<IndexBuffer>(iboDesc);
 
         m_vertexBufferBase = new Vertex[MAX_VERTEX_COUNT];
         m_vertexBufferPtr  = m_vertexBufferBase;
@@ -169,7 +169,7 @@ namespace sal
             .pixels = whitePixels,
         };
 
-        m_whiteTexture = gpu::createTexture(texDesc);
+        m_whiteTexture = MakeRef<Texture>(texDesc);
 
         // init shaders
 
@@ -191,9 +191,9 @@ namespace sal
             .layout         = m_layout,
         };
 
-        m_quadShader   = gpu::createShader(quadShaderDesc);
-        m_circleShader = gpu::createShader(circleShaderDesc);
-        m_lineShader   = gpu::createShader(lineShaderDesc);
+        m_quadShader   = MakeScope<Shader>(quadShaderDesc);
+        m_circleShader = MakeScope<Shader>(circleShaderDesc);
+        m_lineShader   = MakeScope<Shader>(lineShaderDesc);
 
         // cleanup
 
@@ -206,14 +206,14 @@ namespace sal
 
     void Renderer2D::Shutdown()
     {
-        gpu::destroyBuffer(m_batchVBO);
-        gpu::destroyBuffer(m_batchIBO);
+        m_batchVBO.reset();
+        m_batchIBO.reset();
 
-        gpu::destroyTexture(m_whiteTexture);
+        m_whiteTexture.reset();
 
-        gpu::destroyShader(m_quadShader);
-        gpu::destroyShader(m_circleShader);
-        gpu::destroyShader(m_lineShader);
+        m_quadShader.reset();
+        m_circleShader.reset();
+        m_lineShader.reset();
 
         delete[] m_vertexBufferBase;
     }
@@ -222,7 +222,7 @@ namespace sal
         m_camera = camera;
         m_numDrawCalls = 0;
             
-        gpu::bind(gpu::BufferType::VERTEX, m_batchVBO);
+        gpu::bind(gpu::BufferType::VERTEX, m_batchVBO->handle());
         gpu::bind(m_layout);
 
         StartBatch();
@@ -236,8 +236,8 @@ namespace sal
         DrawTexture(m_whiteTexture, position, size, rotation, color);
     }
 
-    void Renderer2D::DrawTexture(gpu::Texture texture, glm::vec2 position, glm::vec2 size, float rotation, glm::vec4 color) {
-        if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Quad) || RequiresFlushForTexture(texture)) {
+    void Renderer2D::DrawTexture(Ref<Texture> texture, glm::vec2 position, glm::vec2 size, float rotation, glm::vec4 color) {
+        if (RequiresFlushForSpace() || RequiresFlushForMode(BatchMode::Quad) || RequiresFlushForTexture(texture->handle())) {
             Flush();
             StartBatch();
         }
@@ -258,7 +258,7 @@ namespace sal
         }
 
         m_batchMode    = BatchMode::Quad;
-        m_batchTexture = texture;
+        m_batchTexture = texture->handle();
 
         m_vertexCount += VERTICES_PER_QUAD;
         m_indexCount  += INDICES_PER_QUAD;
@@ -328,19 +328,19 @@ namespace sal
 
         m_camera.RecalculateViewMatrix();
 
-        gpu::bind(gpu::BufferType::VERTEX, m_batchVBO);
-        gpu::setBufferData(gpu::BufferType::VERTEX, m_batchVBO, sizeof(Vertex) * m_vertexCount, m_vertexBufferBase);
+        gpu::bind(gpu::BufferType::VERTEX, m_batchVBO->handle());
+        gpu::setBufferData(gpu::BufferType::VERTEX, m_batchVBO->handle(), sizeof(Vertex) * m_vertexCount, m_vertexBufferBase);
         
-        gpu::bind(gpu::BufferType::INDEX, m_batchIBO);
+        gpu::bind(gpu::BufferType::INDEX, m_batchIBO->handle());
 
         switch (m_batchMode) {
             case BatchMode::Quad: {
-                gpu::bind(m_quadShader);
+                gpu::bind(m_quadShader->handle());
                 gpu::bind(0, m_batchTexture);
 
-                gpu::setShaderUniform(m_quadShader, "u_projection", m_camera.ProjectionMatrix());
-                gpu::setShaderUniform(m_quadShader, "u_view", m_camera.ViewMatrix());
-                gpu::setShaderUniform(m_quadShader, "u_texture", 0);
+                gpu::setShaderUniform(m_quadShader->handle(), "u_projection", m_camera.ProjectionMatrix());
+                gpu::setShaderUniform(m_quadShader->handle(), "u_view", m_camera.ViewMatrix());
+                gpu::setShaderUniform(m_quadShader->handle(), "u_texture", 0);
 
                 gpu::drawPrimitivesIndexed(gpu::PrimitiveType::TRIANGLE_LIST, m_indexCount);
 
@@ -348,10 +348,10 @@ namespace sal
             }
 
             case BatchMode::Circle: {
-                gpu::bind(m_circleShader);
+                gpu::bind(m_circleShader->handle());
 
-                gpu::setShaderUniform(m_circleShader, "u_projection", m_camera.ProjectionMatrix());
-                gpu::setShaderUniform(m_circleShader, "u_view", m_camera.ViewMatrix());
+                gpu::setShaderUniform(m_circleShader->handle(), "u_projection", m_camera.ProjectionMatrix());
+                gpu::setShaderUniform(m_circleShader->handle(), "u_view", m_camera.ViewMatrix());
 
                 gpu::drawPrimitivesIndexed(gpu::PrimitiveType::TRIANGLE_LIST, m_indexCount);
 
@@ -359,10 +359,10 @@ namespace sal
             }
 
             case BatchMode::Line: {
-                gpu::bind(m_lineShader);
+                gpu::bind(m_lineShader->handle());
 
-                gpu::setShaderUniform(m_lineShader, "u_projection", m_camera.ProjectionMatrix());
-                gpu::setShaderUniform(m_lineShader, "u_view", m_camera.ViewMatrix());
+                gpu::setShaderUniform(m_lineShader->handle(), "u_projection", m_camera.ProjectionMatrix());
+                gpu::setShaderUniform(m_lineShader->handle(), "u_view", m_camera.ViewMatrix());
 
                 gpu::drawPrimitives(gpu::PrimitiveType::LINE_LIST, m_vertexCount);
 
@@ -381,8 +381,8 @@ namespace sal
         return m_batchMode != BatchMode::None && m_batchMode != mode;
     }
 
-    bool Renderer2D::RequiresFlushForTexture(gpu::Texture texture) {
-        return m_batchMode != BatchMode::None && m_batchTexture.id != texture.id;
+    bool Renderer2D::RequiresFlushForTexture(gpu::TextureHandle texture) {
+        return m_batchMode != BatchMode::None && m_batchTexture.id == texture.id;
     }
 
 }
