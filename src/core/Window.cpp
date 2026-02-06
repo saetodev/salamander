@@ -34,13 +34,17 @@ namespace sal {
 
     void Window::Init(int width, int height, const char* title) {
         if (!glfwInit()) {
-            std::cout << "GLFW init failed" << std::endl;
+            const char* message = NULL;
+            glfwGetError(&message);
+
+            std::cout << "GLFW init failed: " << message << std::endl;
             std::exit(-1);
         }
 
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
+        glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -49,7 +53,10 @@ namespace sal {
         m_handle = glfwCreateWindow(width, height, title, NULL, NULL);
 
         if (!m_handle) {
-            std::cout << "GLFW create window failed" << std::endl;
+            const char* message = NULL;
+            glfwGetError(&message);
+
+            std::cout << "GLFW create window failed: " << message << std::endl;
             std::exit(-1);
         }
 

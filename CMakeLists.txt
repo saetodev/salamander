@@ -11,7 +11,28 @@ add_subdirectory("vendor/miniaudio")
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/glm)
 add_subdirectory(vendor/glad)
-find_package(OpenGL REQUIRED)
+
+# ----------------------------------------
+# ANGLE (macOS)
+# ----------------------------------------
+if (APPLE)
+    # Adjust if you built ANGLE somewhere else
+    set(ANGLE_ROOT "/opt/local")
+
+    find_library(ANGLE_EGL
+        NAMES EGL
+        PATHS ${ANGLE_ROOT}/lib
+        REQUIRED
+    )
+
+    find_library(ANGLE_GLESv2
+        NAMES GLESv2
+        PATHS ${ANGLE_ROOT}/lib
+        REQUIRED
+    )
+
+    include_directories(${ANGLE_ROOT}/include)
+endif()
 
 # === Sources ===
 add_library(${PROJECT_NAME}
@@ -29,7 +50,6 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb>
         $<INSTALL_INTERFACE:vendor/stb>
@@ -37,10 +57,22 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC miniaudio glfw glm glad
-    PRIVATE OpenGL::GL
 )
 
+# ----------------------------------------
+# Link ANGLE instead of OpenGL
+# ----------------------------------------
+if (APPLE)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            ${ANGLE_EGL}
+            ${ANGLE_GLESv2}
+    )
+endif()
+
+# === Examples ===
 if (BUILD_EXAMPLES)
     add_subdirectory("examples/bunnymark")
     add_subdirectory("examples/triangle")
 endif()
+
