@@ -4,6 +4,9 @@
 #include "core/Input.h"
 #include "graphics/Renderer2D.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 namespace sal {
 
     App::App(const Settings& settings) {
@@ -15,6 +18,34 @@ namespace sal {
         m_renderer = MakeScope<Renderer2D>();
         m_input    = MakeScope<Input>();
         m_audio    = MakeScope<AudioDevice>();
+    }
+
+    gpu::Texture App::LoadTexture(const char* filename) {
+        int width  = 0;
+        int height = 0;
+        int comp   = 0;
+
+        uint8_t* data = stbi_load(filename, &width, &height, &comp, 4);
+
+        if (!data) {
+            //TODO: error here
+            return {};
+        }
+
+        gpu::TextureDesc texDesc = {
+            .filter = gpu::TextureFilter::NEAREST,
+            .wrap   = gpu::TextureWrap::CLAMP,
+            .format = gpu::PixelFormat::RGBA,
+            .width  = width,
+            .height = height,
+            .pixels = data,
+        };
+
+        gpu::Texture texture = gpu::createTexture(texDesc);
+        
+        stbi_image_free(data);
+
+        return texture;
     }
 
     void App::Run() {

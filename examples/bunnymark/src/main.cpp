@@ -12,6 +12,8 @@ public:
     void Init() {
         sal::Window& window = sal::App::GetWindow();
         m_camera = sal::Camera(0.0f, window.Width(), window.Height(), 0.0f);
+
+        m_texture = LoadTexture("raybunny.png");
     }
 
     void Shutdown() {
@@ -19,24 +21,26 @@ public:
     }
 
     void Update(float delta) {
-        std::cout << "delta:   " << delta * 1000.0f << " ms\n";
+        std::cout << "delta:   " << deltaAverage * 1000.0f << " ms\n";
         std::cout << "count:   " << m_entities.size() << "\n";
         std::cout << "batches: " << sal::App::GetRenderer().NumDrawCalls() << "\n\n";
 
         sal::Input& input = sal::App::GetInput();
 
-        if (input.MouseButtonDown(0)) {
+        if (deltaAverage < (1.0f / 61.0f)) {
             glm::vec2 mousePos = input.MousePosition();
            
-            for (int i = 0; i < 10; i++) {
-                float dx = (std::rand() % 3) - 1;
-                float dy = (std::rand() % 3) - 1;
+            for (int i = 0; i < 50; i++) {
+                float angle = ((float)rand() / RAND_MAX) * 2.0 * M_PI;
+
+                float dx = cos(angle);
+                float dy = sin(angle);
 
                 float r = (std::rand() % 256) / 255.0f;
                 float g = (std::rand() % 256) / 255.0f;
                 float b = (std::rand() % 256) / 255.0f;
 
-                m_entities.emplace_back(mousePos, glm::vec2(100.0f * dx, 100.0f * dy), glm::vec2(32.0f, 32.0f), glm::vec4(r, g, b, 1.0f));
+                m_entities.emplace_back(glm::vec2(320, 240), glm::vec2(100.0f * dx, 100.0f * dy), glm::vec2(32.0f, 32.0f), glm::vec4(r, g, b, 1.0f));
             }
         }
 
@@ -45,6 +49,18 @@ public:
         sal::gpu::clear(0.0f, 0.0f, 0.0f, 1.0f);
         
         RenderEntities();
+
+        timeAccum  += delta;
+        deltaAccum += delta;
+        frameCount += 1;
+
+        if (timeAccum >= 1.0f) {
+            deltaAverage = deltaAccum / frameCount;
+
+            timeAccum -= 1.0f;
+            deltaAccum = 0.0f;
+            frameCount = 0;
+        }
     }
 private:
     void UpdateEntities(float delta) {
@@ -72,15 +88,20 @@ private:
         renderer.Begin(m_camera);
 
         for (const Entity& entity : m_entities) {
-            renderer.DrawRect(entity.position, entity.size, 0.0f, entity.color);
+            renderer.DrawTexture(m_texture, entity.position, entity.size, 0.0f, entity.color);
         }
 
         renderer.End();
     }
 private:
-    sal::Camera m_camera;
-
+    sal::Camera       m_camera  = {};
+    sal::gpu::Texture m_texture = {};
     std::vector<Entity> m_entities;
+
+    float deltaAverage  = 0.0f;
+    float deltaAccum    = 0.0f;
+    float timeAccum     = 0.0f;
+    int   frameCount    = 0;
 };
 
 int main() {

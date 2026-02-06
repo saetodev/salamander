@@ -174,9 +174,9 @@ namespace sal::gpu {
 
     Texture createTexture(TextureDesc desc) {
         GLuint texture = 0;
-        GLenum filter = glTextureFilter(desc.filter);
-        GLenum wrap   = glTextureWrap(desc.wrap);
-        GLenum format = glPixelFormat(desc.format);
+        GLenum filter  = glTextureFilter(desc.filter);
+        GLenum wrap    = glTextureWrap(desc.wrap);
+        GLenum format  = glPixelFormat(desc.format);
 
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);

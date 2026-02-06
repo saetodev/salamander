@@ -198,6 +198,10 @@ namespace sal
         // cleanup
 
         delete[] indexBuffer;
+
+        //TODO: hack
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     void Renderer2D::Shutdown()

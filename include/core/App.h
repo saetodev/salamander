@@ -1,12 +1,13 @@
 #pragma once
 
-#include "core/Base.h"
-#include "Salamander.h"
+#include "core/Window.h"
+#include "core/Input.h"
+#include "audio/AudioDevice.h"
+#include "graphics/Renderer2D.h"
 
 namespace sal {
 
     class Window;
-    class BatchRenderer;
     class Input;
     class AudioDevice;
     class Renderer2D;
@@ -21,6 +22,9 @@ namespace sal {
     public:
         App(const Settings& settings = {});
         virtual ~App() = default;
+
+        //TODO: texture loading hack
+        gpu::Texture LoadTexture(const char* filename);
 
         void Run();
 
