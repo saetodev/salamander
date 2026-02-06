@@ -38,7 +38,7 @@ public:
             .layout         = m_layout,
         };
 
-        m_shader = gpu::createShader(shaderDesc);
+        m_shader = MakeRef<Shader>(shaderDesc);
 
         float vertexData[] = {
             -0.5f, -0.5f,
@@ -53,26 +53,26 @@ public:
             .data  = vertexData,
         };
 
-        m_vertexBuffer = gpu::createBuffer(bufferDesc);
+        m_vertexBuffer = MakeRef<VertexBuffer>(bufferDesc);
     }
 
     void Shutdown() {
-        gpu::destroyShader(m_shader);
-        gpu::destroyBuffer(m_vertexBuffer);
+        m_shader.reset();
+        m_vertexBuffer.reset();
     }
 
     void Update(float delta) {
-        gpu::bind(m_shader);
-        gpu::bind(gpu::BufferType::VERTEX, m_vertexBuffer);
+        gpu::bind(m_shader->handle());
+        gpu::bind(gpu::BufferType::VERTEX, m_vertexBuffer->handle());
         gpu::bind(m_layout);
 
         gpu::clear(0.25f, 0.25f, 0.25f, 1.0f);
         gpu::drawPrimitives(gpu::PrimitiveType::TRIANGLE_LIST, 3);
     }
 private:
-    gpu::Shader       m_shader       = {};
     gpu::VertexLayout m_layout       = {};
-    gpu::Buffer       m_vertexBuffer = {};
+    Ref<Shader>       m_shader       = {};
+    Ref<VertexBuffer> m_vertexBuffer = {};
 };
 
 int main() {
