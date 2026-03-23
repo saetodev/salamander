@@ -371,7 +371,7 @@ namespace sal {
     }
 
     bool Renderer2D::RequiresFlushForSpace() {
-        return m_vertexCount == MAX_VERTEX_COUNT;
+        return m_vertexCount >= MAX_VERTEX_COUNT;
     }
 
     bool Renderer2D::RequiresFlushForMode(BatchMode mode) {
@@ -379,6 +379,6 @@ namespace sal {
     }
 
     bool Renderer2D::RequiresFlushForTexture(Ref<Texture> texture) {
-        return m_batchMode != BatchMode::None && m_batchTexture == texture;
+        return m_batchMode != BatchMode::None && m_batchTexture != texture;
     }
 }
